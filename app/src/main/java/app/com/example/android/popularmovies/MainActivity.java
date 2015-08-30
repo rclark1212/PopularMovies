@@ -25,8 +25,10 @@ import android.view.MenuItem;
     3) Implement tablet for above
     4) flesh out additional control elements
     5) implement data population/helper libs
-    6) refactor as necessary
-    7) tweak UI
+    6) add attribution (need an about menu item)
+    "This product uses the TMDb API but is not endorsed or certified by TMDb."
+    7) refactor as necessary
+    8) tweak UI
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -55,9 +57,11 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             //launch settings
-            /* TODO
             Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent); */
+            startActivity(intent);
+            return true;
+        } else if (id == R.id.action_about) {
+            //TODO - attributes
             return true;
         }
 

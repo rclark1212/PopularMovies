@@ -11,6 +11,8 @@ import android.widget.TextView;
 /**
  * Created by rclark on 8/29/2015.
  * Pulled from mkyong example for an image adapter class for use with gridview
+ * http://www.mkyong.com/android/android-gridview-example/
+ * Adapted for use with popularmovies
  */
 public class ImageAdapter extends BaseAdapter {
     private Context context;

@@ -17,9 +17,9 @@
         android:id="@+id/grid_item_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@+id/label"
+        android:text="dummy"
         android:layout_marginTop="0sp"
-        android:layout_below="@+id/grid_item_image"
+        android:layout_below="@id/grid_item_image"
         android:textSize="14sp" >
     </TextView>
 </RelativeLayout>

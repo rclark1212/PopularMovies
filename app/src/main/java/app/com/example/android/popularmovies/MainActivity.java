@@ -1,10 +1,18 @@
 package app.com.example.android.popularmovies;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupWindow;
 
 /*  OK - summary of project
     1) Supports phone/tablet (ideally ATV but lets see)
@@ -61,7 +69,21 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         } else if (id == R.id.action_about) {
-            //TODO - attributes
+            //show the about box...
+            //use a popup window
+            LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            PopupWindow pw = new PopupWindow(inflater.inflate(R.layout.about_box, null, false),ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT, true);
+
+            View popupParent = this.findViewById(R.id.gridview_movies);
+            //View popupParent = this.findViewById(R.id.fragment);
+            //pw.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+            // PopupWindow to dismiss when when touched outside
+            pw.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+            pw.showAtLocation(popupParent, Gravity.CENTER, 0, 0);
+
             return true;
         }
 

@@ -1,9 +1,13 @@
 package app.com.example.android.popularmovies;
 
+import android.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -30,7 +34,7 @@ import android.widget.PopupWindow;
     Steps:
     1) flesh out all primary nav/screens
     2) add primary data elements like grid view with dummy data on phone
-    3) Implement tablet for above
+    3) Implement tablet for above - 2 fragments, 2 activities, dynamically load fragment
     4) flesh out additional control elements
     5) implement data population/helper libs
     6) add attribution (need an about menu item)
@@ -39,12 +43,29 @@ import android.widget.PopupWindow;
     8) tweak UI
  */
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+    implements MovieListFragment.OnMovieSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //Is this the phone version? If so, need to add the fragment...
+        if (findViewById(R.id.fragment_container) != null) {
+            //Okay - need to add the fragment...
+
+            //But only do this on a new launch...
+            if (savedInstanceState != null) {
+                return;
+            }
+
+            //create a movie list instance...
+            MovieListFragment movieList = new MovieListFragment();
+
+            //add the fragment to the layout...
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, movieList).commit();
+        }
     }
 
 
@@ -88,5 +109,36 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    //routine called when a movie is selected...
+    public void onMovieSelected(int position) {
+        //User selected a movie!
+
+        //Get the detail fragment view...
+        MovieDetailFragment movieDetail = (MovieDetailFragment) getSupportFragmentManager().findFragmentById(R.id.moviedetail_fragment);
+
+        if (movieDetail != null) {
+            //okay - in the tablet 2 fragment layout.
+            //update the view...
+            movieDetail.updateMovieView(position);
+        } else {
+            //okay - need to swap fragments... (phone)
+            //create a new fragment and send it an argument for the selected article...
+            MovieDetailFragment newFragment = new MovieDetailFragment();
+            Bundle args = new Bundle();
+            args.putInt(MovieDetailFragment.ARG_POSITION, position);
+            newFragment.setArguments(args);
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+            //replace the movie list fragment with the detail fragment
+            //and put old on the back stack for use with back button nav...
+            transaction.replace(R.id.fragment_container, newFragment);
+            transaction.addToBackStack(null);
+
+            //and commit
+            transaction.commit();
+        }
+
     }
 }

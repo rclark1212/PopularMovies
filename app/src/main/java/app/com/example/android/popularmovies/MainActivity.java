@@ -1,6 +1,7 @@
 package app.com.example.android.popularmovies;
 
 import android.app.Fragment;
+import android.content.res.Configuration;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
@@ -10,12 +11,15 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
 /*  OK - summary of project
@@ -46,12 +50,40 @@ import android.widget.PopupWindow;
 public class MainActivity extends AppCompatActivity
     implements MovieListFragment.OnMovieSelectedListener {
 
+    public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;    //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        //Is this the phone version? If so, need to add the fragment...
+        //Lets swap the orientation if appropriate here...
+        //Don't bother with large/small xml layouts (legacy anyways)
+        //especially as for 7" tablets we kind of want 2 pane operation. And 7" tablets have
+        //same large description as 5" phones (nexus7/nexus5 report as same)
+        //Make it more general. 3 styles.
+        //2 screen (for smaller screens)
+        //RL for larger landscape
+        //TB for larger portrait
+
+        //get width/height...
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        double width = (float)metrics.widthPixels/(float)metrics.densityDpi;
+        double height = (float)metrics.heightPixels/(float)metrics.densityDpi;
+
+        //rather than do square roots, lets just set a threshold for going to 2 pane. Lets set 5.5" in one dimension as a threshold
+        if ((width > TWO_PANE_SIZE_THRESHOLD) || (height > TWO_PANE_SIZE_THRESHOLD)) {
+            //2 pane design!
+            //now figure out rotation...
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+                setContentView(R.layout.activity_main_portrait);
+            } else {
+                setContentView(R.layout.activity_main_landscape);
+            }
+        } else {
+            setContentView(R.layout.activity_main);
+        }
+
+        //Is this the 2 screen version? If so, need to add the fragment...
         if (findViewById(R.id.fragment_container) != null) {
             //Okay - need to add the fragment...
 

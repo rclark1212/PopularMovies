@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 
@@ -36,10 +37,10 @@ import android.widget.PopupWindow;
         ability to mark/store as favorite locally
 
     Steps:
-    1) flesh out all primary nav/screens
-    2) add primary data elements like grid view with dummy data on phone
-    3) Implement tablet for above - 2 fragments, 2 activities, dynamically load fragment
-    4) flesh out additional control elements
+    1) xflesh out all primary nav/screens
+    2) xadd primary data elements like grid view with dummy data on phone
+    3) xImplement tablet for above - 2 fragments, 2 activities, dynamically load fragment
+    4) xflesh out additional control elements
     5) implement data population/helper libs
     6) add attribution (need an about menu item)
     "This product uses the TMDb API but is not endorsed or certified by TMDb."
@@ -51,10 +52,19 @@ public class MainActivity extends AppCompatActivity
     implements MovieListFragment.OnMovieSelectedListener {
 
     public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;    //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
+    public static MovieData mData;     //this object will be used by other clases...
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //load the data if it does not exist...
+        //first load the data if it does not already exist...
+        if (mData == null)
+        {
+            mData = new MovieData();
+            mData.hackPopulateList(getApplicationContext());
+        }
 
         //Lets swap the orientation if appropriate here...
         //Don't bother with large/small xml layouts (legacy anyways)
@@ -173,4 +183,17 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
+
+    //handle the favorites checkbox here
+    public void onCheckboxClicked(View view) {
+        //TODO
+        CheckBox favorites_check = (CheckBox) view.findViewById(R.id.checkbox_detail_favorite);
+        if (favorites_check != null)
+        {
+            boolean checked = favorites_check.isChecked();
+        }
+
+        //and now do something with it (save/unsave)
+    }
+
 }

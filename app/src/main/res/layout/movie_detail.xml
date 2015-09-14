@@ -10,17 +10,18 @@ Used for the detailed movie view
     tools:context="app.com.example.android.popularmovies.DetailActivityFragment"
     android:id="@+id/detail_fragment">
 
-    <TextView android:text="@string/hello_world"
+    <TextView android:text="MovieTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="50sp"
-        android:id="@+id/detail_text"/>
+        android:id="@+id/detail_movietitle"/>
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="225dp"
         android:id="@+id/detail_image"
-        android:layout_below="@+id/detail_text"
+        android:layout_below="@id/detail_movietitle"
+        android:layout_margin="10dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
@@ -28,48 +29,57 @@ Used for the detailed movie view
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Large Text"
+        android:text="ReleaseYear"
         android:id="@+id/text_detail_year"
-        android:layout_below="@+id/detail_text"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignTop="@id/detail_image"
+        android:layout_toRightOf="@id/detail_image" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Medium Text"
+        android:text="Runtime"
         android:id="@+id/text_detail_runtime"
-        android:layout_below="@+id/text_detail_year"
-        android:layout_alignLeft="@+id/text_detail_year"
-        android:layout_alignStart="@+id/text_detail_year" />
+        android:layout_below="@id/text_detail_year"
+        android:layout_alignLeft="@id/text_detail_year"
+        android:layout_alignStart="@id/text_detail_year" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Small Text"
+        android:text="ReleaseDate"
         android:id="@+id/text_detail_releasedate"
-        android:layout_below="@+id/text_detail_runtime"
-        android:layout_alignLeft="@+id/text_detail_runtime"
-        android:layout_alignStart="@+id/text_detail_runtime" />
+        android:layout_below="@id/text_detail_runtime"
+        android:layout_alignLeft="@id/text_detail_year"
+        android:layout_alignStart="@id/text_detail_year" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Text"
+        android:text="Synopsis"
         android:id="@+id/text_detail_description"
-        android:layout_below="@+id/button_detail_favorite"
-        android:layout_toRightOf="@+id/detail_image"
-        android:layout_toEndOf="@+id/detail_image" />
+        android:layout_below="@id/detail_image"
+        android:layout_alignLeft="@id/detail_image" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Favorite"
+        android:id="@+id/checkbox_detail_favorite"
+        android:onClick="onCheckboxClicked"
+        android:layout_below="@id/text_detail_releasedate"
+        android:layout_alignLeft="@id/text_detail_year"
+        android:layout_alignStart="@id/text_detail_year" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Button"
-        android:id="@+id/button_detail_favorite"
-        android:layout_below="@+id/text_detail_releasedate"
-        android:layout_alignLeft="@+id/text_detail_releasedate"
-        android:layout_alignStart="@+id/text_detail_releasedate" />
+        android:text="@string/Search"
+        android:id="@+id/button_detail_search"
+        android:layout_below="@id/checkbox_detail_favorite"
+        android:layout_alignLeft="@id/text_detail_year"
+        android:layout_alignStart="@id/text_detail_year" />
 
 </RelativeLayout>

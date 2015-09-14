@@ -23,16 +23,8 @@ import android.widget.Toast;
 public class MovieListFragment extends Fragment {
     OnMovieSelectedListener mCallback;
 
-    private ArrayAdapter<String> m_my_array_adapter;
     public final static String EXTRA_MESSAGE = "app.com.example.android.popularmovies.MESSAGE";
-    GridView m_grid;
-    //TODO
-    private static final String[] TestStr = new String[] {
-            "A", "B", "C", "D", "E",
-            "F", "G", "H", "I", "J",
-            "K", "L", "M", "N", "O",
-            "P", "Q", "R", "S", "T",
-            "U", "V", "W", "X", "Y", "Z"};
+    private GridView m_grid;
 
     //Put in an interface for container activity to implement so that fragment can deliver messages
     public interface OnMovieSelectedListener {
@@ -49,10 +41,7 @@ public class MovieListFragment extends Fragment {
         m_grid = (GridView) retView.findViewById(R.id.gridview_movies);
 
         //set the adapter. Note that ImageAdapter is a custom class
-        m_grid.setAdapter(new ImageAdapter(getActivity(), TestStr));
-
-        //note - show the options menu on main page...
-        //setHasOptionsMenu(true);
+        m_grid.setAdapter(new ImageAdapter(getActivity(), MainActivity.mData));
 
         //and listen for a click
         m_grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {

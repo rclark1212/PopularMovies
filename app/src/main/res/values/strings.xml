@@ -10,4 +10,7 @@
     <string name="pref_ordering_default">1</string>
     <string name="about_text1">Popular Movies App - written for Udacity Nanodegree Program - by Rich Clark</string>
     <string name="about_text2">This product uses the TMDb API but is not endorsed or certified by TMDb.</string>
+    <string name="Favorite">Favorite</string>
+    <string name="Search">Search</string>
+    <string name="minutes">minutes</string>
 </resources>

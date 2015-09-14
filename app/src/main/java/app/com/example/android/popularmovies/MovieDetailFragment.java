@@ -1,12 +1,20 @@
 package app.com.example.android.popularmovies;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * Created by rclark on 9/9/2015.
@@ -49,14 +57,62 @@ public class MovieDetailFragment extends Fragment {
         }
     }
 
+
     public void updateMovieView(int position) {
-        //hack in some data for now...
-        String message = new String();
-        message = "" + position;
-        TextView text = (TextView) getActivity().findViewById(R.id.detail_text);
+
+        //update detail view based on position selection
+
+        //Do title first
+        String message = MainActivity.mData.getItem(position).getTitle();
+        TextView text = (TextView) getActivity().findViewById(R.id.detail_movietitle);
         if (text != null) {
             text.setText(message.toCharArray(), 0, message.length());
         }
+
+        //Then synopsis
+        message = MainActivity.mData.getItem(position).getSynopsis();
+        text = (TextView) getActivity().findViewById(R.id.text_detail_description);
+        if (text != null) {
+            text.setText(message.toCharArray(), 0, message.length());
+        }
+
+        //Then release date
+        DateFormat df = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
+        message = df.format(MainActivity.mData.getItem(position).getReleaseDate());
+        text = (TextView) getActivity().findViewById(R.id.text_detail_releasedate);
+        if (text != null) {
+            text.setText(message.toCharArray(), 0, message.length());
+        }
+
+        //Then release year...
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(MainActivity.mData.getItem(position).getReleaseDate());
+        message = "" + calendar.get(Calendar.YEAR);
+        text = (TextView) getActivity().findViewById(R.id.text_detail_year);
+        if (text != null) {
+            text.setText(message.toCharArray(), 0, message.length());
+        }
+
+        //Then image...
+        ImageView imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
+        if (imageView != null) {
+            //TODO - fix below
+            imageView.setImageResource(MainActivity.mData.getItem(position).getPoster());
+        }
+
+        //And now runtime
+        message = "" + MainActivity.mData.getItem(position).getRuntime() + " " + getString(R.string.minutes);
+        text = (TextView) getActivity().findViewById(R.id.text_detail_runtime);
+        if (text != null) {
+            text.setText(message.toCharArray(), 0, message.length());
+        }
+
+        //finaly, deal with the favorites checkbox state
+        CheckBox checkbox_favs = (CheckBox) getActivity().findViewById(R.id.checkbox_detail_favorite);
+        if (checkbox_favs != null) {
+            checkbox_favs.setChecked(MainActivity.mData.getItem(position).getFavorite());
+        }
+
         mCurrentPosition = position;
     }
 

@@ -2,6 +2,9 @@ package app.com.example.android.popularmovies;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +29,7 @@ public class MovieListFragment extends Fragment {
 
     public final static String EXTRA_MESSAGE = "app.com.example.android.popularmovies.MESSAGE";
     private GridView m_grid;
+    private ImageAdapter m_my_array_adapter;
 
     //Put in an interface for container activity to implement so that fragment can deliver messages
     public interface OnMovieSelectedListener {
@@ -41,7 +46,8 @@ public class MovieListFragment extends Fragment {
         m_grid = (GridView) retView.findViewById(R.id.gridview_movies);
 
         //set the adapter. Note that ImageAdapter is a custom class
-        m_grid.setAdapter(new ImageAdapter(getActivity(), MainActivity.mData));
+        m_my_array_adapter = new ImageAdapter(getActivity(), MainActivity.mData);
+        m_grid.setAdapter(m_my_array_adapter);
 
         //and listen for a click
         m_grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -65,6 +71,9 @@ public class MovieListFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
+        //update the movies...
+        updateMovies();
+
         // When in two-pane layout, set the movie view to highlight the selected list item
         // (We do this during onStart because at the point the listview is available.)
         if (getFragmentManager().findFragmentById(R.id.movielist_fragment) != null) {
@@ -84,6 +93,39 @@ public class MovieListFragment extends Fragment {
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnMovieSelectedListener");
+        }
+    }
+
+    //update the movie data here...
+    private void updateMovies() {
+
+        //get ordering preference...
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String ordering = prefs.getString(getString(R.string.pref_ordering_key), getString(R.string.pref_ordering_default));
+
+        MainActivity.mData.hackPopulateList(getContext());
+
+        new FetchMoviesTask().execute(ordering);
+    }
+
+    private class FetchMoviesTask extends AsyncTask<String, Void, String> {
+        private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
+
+        //background work...
+        protected String doInBackground(String... ordering) {
+
+            if (ordering == null) {
+                return "";
+            }
+
+            MainActivity.mData.hackPopulateList(getContext());
+            return "";
+        }
+
+        //And now to repopulate with real data
+        protected void onPostExecute() {
+            //update the global adapter with weatherdata
+            m_my_array_adapter.notifyDataSetChanged();
         }
     }
 }

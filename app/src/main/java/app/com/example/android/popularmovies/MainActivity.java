@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity
         if (mData == null)
         {
             mData = new MovieData();
-            mData.hackPopulateList(getApplicationContext());
+            //mData.hackPopulateList(getApplicationContext());
         }
 
         //Lets swap the orientation if appropriate here...

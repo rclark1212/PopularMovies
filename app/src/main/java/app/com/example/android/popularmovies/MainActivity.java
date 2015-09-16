@@ -131,6 +131,9 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
+        } else if (id == R.id.action_update) {
+            //TODO - remove before submission
+            //mData.loadTMDB("1", getResources().getString(R.string.TMDB_API_KEY));
         } else if (id == R.id.action_about) {
             //show the about box...
             //use a popup window

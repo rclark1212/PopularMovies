@@ -16,11 +16,11 @@ import android.widget.TextView;
  * And note that the code was very buggy. Had to modify/fix to deal with convertview.
  */
 public class ImageAdapter extends BaseAdapter {
-    private Context context;
+    private Context mContext;
     private MovieData mValues;
 
     public ImageAdapter(Context context, MovieData mobileValues) {
-        this.context = context;
+        this.mContext = context;
         this.mValues = mobileValues;
     }
 
@@ -30,7 +30,9 @@ public class ImageAdapter extends BaseAdapter {
 
         if (convertView == null) {
 
-            LayoutInflater inflater = (LayoutInflater) context
+            gridView = new View(mContext);
+
+            LayoutInflater inflater = (LayoutInflater) mContext
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
             // get layout from mobile.xml
@@ -40,18 +42,20 @@ public class ImageAdapter extends BaseAdapter {
             gridView = (View) convertView;
         }
 
-        // set value into textview
-        TextView textView = (TextView) gridView
-                .findViewById(R.id.grid_item_label);
+//        if (position < mValues.length()) {
+            // set value into textview
+            TextView textView = (TextView) gridView
+                    .findViewById(R.id.grid_item_label);
 
-        textView.setText(mValues.getItem(position).getTitle());
+            textView.setText(mValues.getItem(position).getTitle());
 
-        // set image based on selected text
-        ImageView imageView = (ImageView) gridView
-                .findViewById(R.id.grid_item_image);
+            // set image based on selected text
+            ImageView imageView = (ImageView) gridView
+                    .findViewById(R.id.grid_item_image);
 
-        //TODO - fix below
-        imageView.setImageResource(mValues.getItem(position).getPoster());
+            //TODO - fix below
+            imageView.setImageResource(mValues.getItem(position).getPoster());
+  //      }
 
         return gridView;
     }

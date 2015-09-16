@@ -103,8 +103,14 @@ public class MovieListFragment extends Fragment {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String ordering = prefs.getString(getString(R.string.pref_ordering_key), getString(R.string.pref_ordering_default));
 
-        MainActivity.mData.hackPopulateList(getContext());
+        //throw some hack data up...
+        //MainActivity.mData.clear();
+        //MainActivity.mData.hackPopulateList(getContext());
 
+        //get real data...
+        //But first, notify that data no longer valid... (and clear data)
+        m_my_array_adapter.notifyDataSetInvalidated();
+        MainActivity.mData.clear();
         new FetchMoviesTask().execute(ordering);
     }
 
@@ -118,14 +124,15 @@ public class MovieListFragment extends Fragment {
                 return "";
             }
 
-            MainActivity.mData.hackPopulateList(getContext());
+            MainActivity.mData.loadTMDBFromNetwork(ordering[0], getResources().getString(R.string.TMDB_API_KEY));
             return "";
         }
 
         //And now to repopulate with real data
-        protected void onPostExecute() {
-            //update the global adapter with weatherdata
+        protected void onPostExecute(String dummy) {
+            //update the global adapter
             m_my_array_adapter.notifyDataSetChanged();
+            m_grid.invalidateViews();   //hmm - I would expect line above to do this. But it does not :(
         }
     }
 }

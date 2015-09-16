@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.Toast;
 
 /*  OK - summary of project
     1) Supports phone/tablet (ideally ATV but lets see)
@@ -62,8 +63,7 @@ public class MainActivity extends AppCompatActivity
         //first load the data if it does not already exist...
         if (mData == null)
         {
-            mData = new MovieData();
-            //mData.hackPopulateList(getApplicationContext());
+            mData = new MovieData(getApplicationContext());
         }
 
         //Lets swap the orientation if appropriate here...
@@ -131,9 +131,6 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
-        } else if (id == R.id.action_update) {
-            //TODO - remove before submission
-            //mData.loadTMDB("1", getResources().getString(R.string.TMDB_API_KEY));
         } else if (id == R.id.action_about) {
             //show the about box...
             //use a popup window

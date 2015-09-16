@@ -1,7 +1,11 @@
 package app.com.example.android.popularmovies;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -32,13 +36,18 @@ public class MovieData {
     private static final String TMDB_MOVIES = "movie";
     private static final String TMDB_API_KEY = "api_key";
     private static final String TMDB_SORT_ORDER = "sort_by";
+    private static final String TMDB_SORTBY_POPULARITY = "popularity.desc";
+    private static final String TMDB_SORTBY_RATING = "vote_average.desc";
+
     private final String LOG_TAG = MovieData.class.getSimpleName();
 
     private ArrayList<MovieItem> mMovies;
+    private Context mContext;
 
-    public MovieData() {
+    public MovieData(Context ctx) {
         //just init the list here...
         mMovies = new ArrayList<MovieItem>();
+        mContext = ctx;
     }
 
     public void hackPopulateList(Context ctx) {
@@ -48,10 +57,11 @@ public class MovieData {
             String title = "TestTitle #" + i;
             String synopsis = "This movie (generic title #" + i + " is a hack test of using objects for the data structures. It is a boring and useless story of test data which continues to be boring and useless.";
             double rating = (double)i/5.;
-            Date release = new Date(1000000);
-            int poster = R.drawable.android_logo; //TODO - temp just use resource ID
+            String release = "2012-3-3";
+            String posterpath = "";
+            Bitmap posterbm = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.android_logo);
             Boolean favorite = false;
-            MovieItem movie = new MovieItem(i,title,poster,synopsis,rating,release,favorite, i*30);
+            MovieItem movie = new MovieItem(""+i,title,posterpath, posterbm,synopsis,rating,release,favorite, i*30);
             mMovies.add(movie);
         }
     }
@@ -91,6 +101,12 @@ public class MovieData {
             // Possible parameters are avaiable at TMDB API page, at
             // http://http://docs.themoviedb.apiary.io/#reference
             Uri.Builder builder = new Uri.Builder();
+            String sortby = TMDB_SORTBY_POPULARITY;     //default
+
+            if (ordering.equals("2"))
+            {
+                sortby = TMDB_SORTBY_RATING;            //but if by rating...
+            }
 
             builder.scheme("http")
                     .authority(TMDB_API_BASE)
@@ -98,8 +114,9 @@ public class MovieData {
                     .appendPath(TMDB_DISCOVERY)
                     .appendPath(TMDB_MOVIES)
                     .appendQueryParameter(TMDB_API_KEY, apikey)
-                   //deal with ordering...
-                    .appendQueryParameter(TMDB_SORT_ORDER, "popularity.desc");
+                    //deal with ordering..
+                    // 1 = popularity, 2 = rating
+                    .appendQueryParameter(TMDB_SORT_ORDER, sortby);
 
 //                    .appendQueryParameter("mode", "json")
 //                    .appendQueryParameter("units", "metric")
@@ -203,12 +220,29 @@ public class MovieData {
             //extract what we need
             String title = jMovie.getString(TMDB_TITLE);
             String synopsis = jMovie.getString(TMDB_SYNOPSIS);
-            Date newDate = new Date(0);
-            MovieItem movie = new MovieItem(0,title,R.drawable.android_logo, synopsis, 0, newDate, false, 0);
+            String releaseDate = jMovie.getString(TMDB_RELEASEDATE);
+            String posterPath = jMovie.getString(TMDB_POSTER);
+            String movieID = jMovie.getString(TMDB_ID);
+
+            //TODO - get bitmap...
+            Bitmap moviebitmap = null;
+
+            try
+            {
+                Log.v(LOG_TAG, "Trying to load bitmap: " + posterPath);
+                moviebitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver() , Uri.parse(posterPath));
+            }
+            catch (Exception e)
+            {
+                Log.v(LOG_TAG, "Failure getting bitmap: " + posterPath);
+            }
+
+            MovieItem movie = new MovieItem(movieID, title, posterPath, moviebitmap, synopsis, 0, releaseDate, false, 0);
             mMovies.add(movie);
 
             //TODO BELOW
             /*
+
             // The date/time is returned as a long.  We need to convert that
             // into something human-readable, since most people won't read "1400356800" as
             // "this saturday".

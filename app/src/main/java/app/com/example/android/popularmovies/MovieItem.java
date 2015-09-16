@@ -1,5 +1,6 @@
 package app.com.example.android.popularmovies;
 
+import android.graphics.Bitmap;
 import android.widget.ImageView;
 
 import java.util.Date;
@@ -11,18 +12,20 @@ import java.util.Date;
  */
 public class MovieItem {
     private String mTitle;
-    private int mPoster;        //TODO - to fix. Eventually will be URL. In meantime, use resource
+    private String mPosterPath;
+    private Bitmap mBitmap;
     private String mSynopsis;
     private double mRating;
-    private Date mReleaseDate;
+    private String mReleaseDate;
     private Boolean mFavorite;
-    private int mMovieID;
+    private String mMovieID;
     private int mRuntime;
 
     //In case we want to instantiate directly with data
-    public MovieItem(int movieID, String title, int poster, String synopsis, double rating, Date releaseDate, Boolean favorite, int runtime) {
+    public MovieItem(String movieID, String title, String poster, Bitmap bitmap, String synopsis, double rating, String releaseDate, Boolean favorite, int runtime) {
         mTitle = title;
-        mPoster = poster;
+        mPosterPath = poster;
+        mBitmap = bitmap;
         mSynopsis = synopsis;
         mRating = rating;
         mReleaseDate = releaseDate;
@@ -35,9 +38,11 @@ public class MovieItem {
         return mTitle;
     }
 
-    public int getPoster() {
-        return mPoster;
+    public String getPosterPath() {
+        return mPosterPath;
     }
+
+    public Bitmap getBitmap() { return mBitmap; }
 
     public String getSynopsis() {
         return mSynopsis;
@@ -47,7 +52,7 @@ public class MovieItem {
         return mRating;
     }
 
-    public Date getReleaseDate() {
+    public String getReleaseDate() {
         return mReleaseDate;
     }
 
@@ -56,4 +61,6 @@ public class MovieItem {
     }
 
     public int getRuntime() { return mRuntime; }
+
+    public String getMovieID() { return mMovieID; }
 }

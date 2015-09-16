@@ -1,5 +1,6 @@
 package app.com.example.android.popularmovies;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -77,17 +78,20 @@ public class MovieDetailFragment extends Fragment {
         }
 
         //Then release date
-        DateFormat df = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
-        message = df.format(MainActivity.mData.getItem(position).getReleaseDate());
+        //DateFormat df = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
+        //message = df.format(MainActivity.mData.getItem(position).getReleaseDate());
+        message = MainActivity.mData.getItem(position).getReleaseDate();
         text = (TextView) getActivity().findViewById(R.id.text_detail_releasedate);
         if (text != null) {
             text.setText(message.toCharArray(), 0, message.length());
         }
 
         //Then release year...
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(MainActivity.mData.getItem(position).getReleaseDate());
-        message = "" + calendar.get(Calendar.YEAR);
+        //Calendar calendar = Calendar.getInstance();
+        //calendar.setTime(MainActivity.mData.getItem(position).getReleaseDate());
+        if (message.length() > 4) {
+            message = message.substring(0, 4);
+        }
         text = (TextView) getActivity().findViewById(R.id.text_detail_year);
         if (text != null) {
             text.setText(message.toCharArray(), 0, message.length());
@@ -96,9 +100,16 @@ public class MovieDetailFragment extends Fragment {
         //Then image...
         ImageView imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
         if (imageView != null) {
-            //TODO - fix below
-            imageView.setImageResource(MainActivity.mData.getItem(position).getPoster());
+            //TODO - check below
+            Bitmap bm = MainActivity.mData.getItem(position).getBitmap();
+            if (bm != null) {
+                imageView.setImageBitmap(bm);
+            } else {
+                //throw up some generic image...
+                imageView.setImageResource(R.drawable.android_logo);
+            }
         }
+
 
         //And now runtime
         message = "" + MainActivity.mData.getItem(position).getRuntime() + " " + getString(R.string.minutes);

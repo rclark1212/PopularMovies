@@ -1,6 +1,7 @@
 package app.com.example.android.popularmovies;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -100,6 +101,7 @@ public class MovieListFragment extends Fragment {
     private void updateMovies() {
 
         //get ordering preference...
+        //1 = popularity, 2 = rating
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String ordering = prefs.getString(getString(R.string.pref_ordering_key), getString(R.string.pref_ordering_default));
 

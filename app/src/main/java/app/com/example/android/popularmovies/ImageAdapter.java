@@ -1,6 +1,7 @@
 package app.com.example.android.popularmovies;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,20 +43,24 @@ public class ImageAdapter extends BaseAdapter {
             gridView = (View) convertView;
         }
 
-//        if (position < mValues.length()) {
-            // set value into textview
-            TextView textView = (TextView) gridView
-                    .findViewById(R.id.grid_item_label);
+        // set value into textview
+        TextView textView = (TextView) gridView
+                .findViewById(R.id.grid_item_label);
 
-            textView.setText(mValues.getItem(position).getTitle());
+        textView.setText(mValues.getItem(position).getTitle());
 
-            // set image based on selected text
-            ImageView imageView = (ImageView) gridView
-                    .findViewById(R.id.grid_item_image);
+        // set image based on selected text
+        ImageView imageView = (ImageView) gridView
+                .findViewById(R.id.grid_item_image);
 
-            //TODO - fix below
-            imageView.setImageResource(mValues.getItem(position).getPoster());
-  //      }
+        //TODO - check below
+        Bitmap bm = mValues.getItem(position).getBitmap();
+        if (bm != null) {
+            imageView.setImageBitmap(bm);
+        } else {
+            //throw up some generic image...
+            imageView.setImageResource(R.drawable.android_logo);
+        }
 
         return gridView;
     }

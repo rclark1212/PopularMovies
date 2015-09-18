@@ -1,12 +1,6 @@
 package app.com.example.android.popularmovies;
 
-import android.content.ContentResolver;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.provider.MediaStore;
-import android.text.format.Time;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -20,13 +14,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * Created by rclark on 9/11/2015.
  * Manages the list of movies.
- * Functions supported including loading data, loading images, sorting, marking favorites
- * finding trailers?
+ * Functions supported including loading data, parsing JSON, and getter functions
+ * ?finding trailers?
  * Will also provide utility functions for the movies
  */
 public class MovieData {
@@ -43,19 +36,18 @@ public class MovieData {
     private final String LOG_TAG = MovieData.class.getSimpleName();
 
     private ArrayList<MovieItem> mMovies;   //The main database
-    private Context mContext;               //Save off a context to use on bitmap loading
     private String mBaseURL;                //Base URL for images. Per TMDB API docs, this generally only needs to be checked once...
                                             //sure it might change if you left app open for months but deal with this on a production app. (would refresh if I hit error loading bitmap)
     private String mImageSizePath;          //to be used with mBaseURL (size of poster to load)
 
-    public MovieData(Context ctx) {
+    public MovieData() {
         //just init the list here...
+        //note this is the main database of movies we load
         mMovies = new ArrayList<MovieItem>();
-        mContext = ctx;
         mBaseURL = null;
     }
 
-    public void hackPopulateList(Context ctx) {
+    public void hackPopulateList() {
         //hack function
         for (int i = 0; i < 40; i++) {
             //hack in some fake data...
@@ -69,6 +61,7 @@ public class MovieData {
         }
     }
 
+    //Class getters are below
     public MovieItem getItem(int position) {
         return mMovies.get(position);
     }
@@ -93,16 +86,19 @@ public class MovieData {
         String moviesJsonStr = null;
 
         Uri.Builder builder = new Uri.Builder();
-        String sortby = TMDB_SORTBY_POPULARITY;     //default
+        String sortby = TMDB_SORTBY_POPULARITY;     //default to popularity search
 
         if (ordering.equals("2"))
         {
-            sortby = TMDB_SORTBY_RATING;            //but if by rating...
+            sortby = TMDB_SORTBY_RATING;            //but if by rating (per settings), sort by rating
         }
 
         //need to read both configuration (to get image url base)
         //and make the discovery query...
-        //build discovery ...
+        //build discovery URL first
+        // Construct the URL for the TMDB query
+        // Possible parameters are avaiable at TMDB API page, at
+        // http://http://docs.themoviedb.apiary.io/#reference
         builder.scheme("http")
                 .authority(TMDB_API_BASE)
                 .appendPath(TMDB_VERSION)
@@ -121,7 +117,10 @@ public class MovieData {
 
         //Do we have a base URL yet? (for loading images)
         if (mBaseURL == null) {
-            //okay, get the configuration
+            //okay, get the configuration from TMDB
+            // Construct the URL for the TMDB query
+            // Possible parameters are avaiable at TMDB API page, at
+            // http://http://docs.themoviedb.apiary.io/#reference
             Uri.Builder buildercfg = new Uri.Builder();
             buildercfg.scheme("http")
                     .authority(TMDB_API_BASE)
@@ -133,14 +132,14 @@ public class MovieData {
 
             Log.v(LOG_TAG, "getting config URL string: " + urlbuild);
 
-            //Okay - get the config info
+            //Okay - get the config info (raw json data)
             String TMDBCfgStr = getTMDBDataFromURL(urlbuild);
 
             //if we had a valid read...
             if (TMDBCfgStr != null)
             {
                 try {
-                    //parse the base info...
+                    //parse the config info...
                     getTMDBConfigDataFromJson(TMDBCfgStr);
                 }
                 catch (JSONException e)
@@ -160,7 +159,7 @@ public class MovieData {
         }
 
         try {
-            //now return it
+            //now parse the movie json data captured earlier
             getMovieDataFromJson(moviesJsonStr);
         }
         catch (JSONException e)
@@ -171,6 +170,10 @@ public class MovieData {
         }
     }
 
+    /*
+        Function takes in a url string and returns data returned from the URL on a get query
+        Used to get both movie data and config data from TMDB
+     */
     private String getTMDBDataFromURL(String urlbuild) {
 
         // These two need to be declared outside the try/catch
@@ -183,9 +186,6 @@ public class MovieData {
         StringBuffer buffer = new StringBuffer();
 
         try {
-            // Construct the URL for the TMDB query
-            // Possible parameters are avaiable at TMDB API page, at
-            // http://http://docs.themoviedb.apiary.io/#reference
 
             //make the URL
             URL url = new URL(urlbuild);
@@ -242,16 +242,21 @@ public class MovieData {
         return moviesJsonStr;
     }
 
+    /*
     //  Parse config information from TMDB call here
     //  Pass in JSON string blob
     //  Use to set the globals for base_url and the default poster load size
+    //  Function will set the mBase_URL and mImageSizePath private class globals
+    //  Structure of json is avaiable at TMDB API page, at
+    //  http://http://docs.themoviedb.apiary.io/#reference
+    */
     private void getTMDBConfigDataFromJson(String configJsonStr)
             throws JSONException {
         final String TMDB_CFG_BASEURL = "base_url";
         final String TMDB_CFG_POSTERSIZE  = "poster_sizes";
         final String TMDB_CFG_IMAGES = "images";
 
-        //JSON quick ref here...
+        //JSON quick ref here for config structure...
         //obj->images->base_url
         //obj->images->poster_sizes
         JSONObject cfgJson = new JSONObject(configJsonStr);
@@ -273,18 +278,19 @@ public class MovieData {
             mImageSizePath = null;  //boo - didn't get array for some reason...
         }
 
-        //all done...
+        //all done... Log the data
         Log.v(LOG_TAG, "Parse out TMDB config strings (base_url, imagepath): " + mBaseURL + " " + mImageSizePath);
 
     }
 
-    //TODO - cleanup below...
     /*
-        Note that this code can be refactored to be more generic in future.
-        Ideally we parse the BaseURL JSON and save that data off. And never parse it again.
-        For now, just use a global which contains the base URL (for images) - mJSONBaseURL
-        Do it in one monolithic block of code. And note we do repetetive processing for BaseURL when
-        we don't really have to do so.
+        Function below will parse a TMDB discovery JSON object.
+        Structure of json is avaiable at TMDB API page, at
+        http://http://docs.themoviedb.apiary.io/#reference
+        Note that this code can be refactored to be more generic in future (use same JSON parser
+        for both config and discovery). However the functionality of the code is limited enough
+        to make it a low ROI.
+        Also uses class globals mBaseURL, mImageSizePath to construct the url for image loading
      */
     private void getMovieDataFromJson(String moviesJsonStr)
             throws JSONException {
@@ -303,7 +309,7 @@ public class MovieData {
         JSONObject moviesJson = new JSONObject(moviesJsonStr);
         JSONArray moviesArray = moviesJson.getJSONArray(TMDB_LIST);
 
-        //master mMovies array should have already been cleared
+        // mMovies array should have already been cleared
 
         //and now start reading in the data...
         for(int i = 0; i < moviesArray.length(); i++) {
@@ -322,7 +328,10 @@ public class MovieData {
             //create the image file path
             String imgpath = mBaseURL + mImageSizePath + posterPath;
 
+            //and create the new movie item
             MovieItem movie = new MovieItem(movieID, title, imgpath, synopsis, rating, releaseDate, false, 0);
+
+            //and add to our array
             mMovies.add(movie);
 
         }

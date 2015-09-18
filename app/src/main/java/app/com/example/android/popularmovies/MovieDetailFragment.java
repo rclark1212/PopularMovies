@@ -22,10 +22,12 @@ import java.util.Locale;
 /**
  * Created by rclark on 9/9/2015.
  * Pulled from fragment example in android dev documentation
+ * This fragment displays detailed information for a selected movie.
+ * It can be presented to user in a multi-fragment 2 pane UI or in a single screen
  */
 public class MovieDetailFragment extends Fragment {
-    final static String ARG_POSITION = "position";
-    int mCurrentPosition = -1;
+    final static String ARG_POSITION = "position";      //used to pass which item selected when we load fragment
+    private int mCurrentPosition = -1;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -62,8 +64,7 @@ public class MovieDetailFragment extends Fragment {
             // A couple options here - we could blank this fragment. But that would look weird.
             // We could put up a screen saying "please select a movie". But kind of redundant.
             // Instead, how about just setting the detail screen to the first movie in the list?
-            mCurrentPosition = 0;
-            updateMovieView(mCurrentPosition);
+            updateMovieView(0);
         }
     }
 

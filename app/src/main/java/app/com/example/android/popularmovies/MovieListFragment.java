@@ -23,7 +23,8 @@ import android.widget.Toast;
 
 /**
  * A placeholder fragment containing a simple view.
- * This fragment will populate, show and respond to the main movies screen
+ * This fragment will populate, show and respond to the main movies screen in a grid view.
+ * User will select an element of this gridview which will then update a second movie detail view fragment
  */
 public class MovieListFragment extends Fragment {
     OnMovieSelectedListener mCallback;
@@ -66,7 +67,7 @@ public class MovieListFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
-        //update the movies...
+        //update the movies (reloads the dataset from TMDB and refreshes grid view)
         updateMovies();
 
         // When in two-pane layout, set the movie view to highlight the selected list item
@@ -83,6 +84,7 @@ public class MovieListFragment extends Fragment {
 
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception.
+        // housekeeping function
         try {
             mCallback = (OnMovieSelectedListener) activity;
         } catch (ClassCastException e) {
@@ -92,21 +94,26 @@ public class MovieListFragment extends Fragment {
     }
 
     //update the movie data here...
+    //routine will
+    // 1) clear the main movie database
+    // 2) spawns a seperate thread which then loads the data
+    // 3) updates the adapter on the UI thread when (2) is done.
     private void updateMovies() {
 
         //get ordering preference...
-        //1 = popularity, 2 = rating
+        //1 = popularity, 2 = rating (and soon add favorites)
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String ordering = prefs.getString(getString(R.string.pref_ordering_key), getString(R.string.pref_ordering_default));
 
         //throw some hack data up... For test only.
         //MainActivity.mData.clear();
-        //MainActivity.mData.hackPopulateList(getContext());
+        //MainActivity.mData.hackPopulateList();
 
         //get real data...
         //But first, notify that data no longer valid... (and clear data)
         m_my_array_adapter.notifyDataSetInvalidated();
         MainActivity.mData.clear();
+        //kick off the fetch background thread
         new FetchMoviesTask().execute(ordering);
     }
 

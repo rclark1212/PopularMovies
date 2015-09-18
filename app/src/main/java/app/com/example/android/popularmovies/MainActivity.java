@@ -1,27 +1,21 @@
 package app.com.example.android.popularmovies;
 
-import android.app.Fragment;
 import android.content.res.Configuration;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.Toast;
 
@@ -43,34 +37,34 @@ import android.widget.Toast;
     2) xadd primary data elements like grid view with dummy data on phone
     3) xImplement tablet for above - 2 fragments, 2 activities, dynamically load fragment
     4) xflesh out additional control elements
-    5) implement data population/helper libs
-    6) add attribution (need an about menu item)
+    5) ximplement data population/helper libs
+    6) xadd attribution (need an about menu item)
     "This product uses the TMDb API but is not endorsed or certified by TMDb."
-    7) refactor as necessary
+    7) xrefactor as necessary
     8) tweak UI
  */
 
 public class MainActivity extends AppCompatActivity
     implements MovieListFragment.OnMovieSelectedListener {
 
-    public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;    //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
-    public static MovieData mData;     //this object will be used by other clases...
-
+    public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;   //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
+    public static MovieData mData;                              //this object will be used by other clases... make it public
+                                                                //this is the primary database of movies data
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         //load the data if it does not exist...
-        //first load the data if it does not already exist...
+        //first create the data if it does not already exist...
         if (mData == null)
         {
-            mData = new MovieData(getApplicationContext());
+            mData = new MovieData();
         }
 
         //Lets swap the orientation if appropriate here...
         //Don't bother with large/small xml layouts (legacy anyways)
         //especially as for 7" tablets we kind of want 2 pane operation. And 7" tablets have
-        //same large description as 5" phones (nexus7/nexus5 report as same)
+        //same "large" description as 5" phones (nexus7/nexus5 report as same)
         //Make it more general. 3 styles.
         //2 screen (for smaller screens)
         //RL for larger landscape
@@ -85,6 +79,7 @@ public class MainActivity extends AppCompatActivity
         if ((width > TWO_PANE_SIZE_THRESHOLD) || (height > TWO_PANE_SIZE_THRESHOLD)) {
             //2 pane design!
             //now figure out rotation...
+            //maybe a better way to do this but I am doing it with 2 layouts
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
                 setContentView(R.layout.activity_main_portrait);
             } else {
@@ -140,8 +135,6 @@ public class MainActivity extends AppCompatActivity
             PopupWindow pw = new PopupWindow(inflater.inflate(R.layout.about_box, null, false),ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT, true);
 
             View popupParent = this.findViewById(R.id.gridview_movies);
-            //View popupParent = this.findViewById(R.id.fragment);
-            //pw.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
             // PopupWindow to dismiss when when touched outside
             pw.setBackgroundDrawable(new ColorDrawable(Color.GRAY));
@@ -161,6 +154,7 @@ public class MainActivity extends AppCompatActivity
         //Get the detail fragment view...
         MovieDetailFragment movieDetail = (MovieDetailFragment) getSupportFragmentManager().findFragmentById(R.id.moviedetail_fragment);
 
+        // does the detail view exist?
         if (movieDetail != null) {
             //okay - in the tablet 2 fragment layout.
             //update the view...

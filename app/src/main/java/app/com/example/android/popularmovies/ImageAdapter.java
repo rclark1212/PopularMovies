@@ -1,7 +1,6 @@
 package app.com.example.android.popularmovies;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,14 +12,14 @@ import com.squareup.picasso.Picasso;
 
 /**
  * Created by rclark on 8/29/2015.
- * Pulled from mkyong example for an image adapter class for use with gridview
+ * Pulled from mkyong example on web for an image adapter class for use with gridview
  * http://www.mkyong.com/android/android-gridview-example/
  * Adapted for use with popularmovies
  * And note that the code was very buggy. Had to modify/fix to deal with convertview.
  */
 public class ImageAdapter extends BaseAdapter {
-    private Context mContext;
-    private MovieData mValues;
+    private Context mContext;       //save off the context
+    private MovieData mValues;      //and a reference to the backing dataset
 
     public ImageAdapter(Context context, MovieData mobileValues) {
         this.mContext = context;
@@ -31,8 +30,10 @@ public class ImageAdapter extends BaseAdapter {
 
         View gridView;
 
+        // are we recycling a view?
         if (convertView == null) {
 
+            // if not, create and inflate a new gridView
             gridView = new View(mContext);
 
             LayoutInflater inflater = (LayoutInflater) mContext
@@ -42,6 +43,7 @@ public class ImageAdapter extends BaseAdapter {
             gridView = inflater.inflate(R.layout.grid_layout, null);
 
         } else {
+            // use the recycled view
             gridView = (View) convertView;
         }
 
@@ -49,8 +51,7 @@ public class ImageAdapter extends BaseAdapter {
         TextView textView = (TextView) gridView
                 .findViewById(R.id.grid_item_label);
 
-        //TODO - ugly to have clipped text. If text does not fit in textView, cut text until it
-        //does fit and add "...".
+        // note that textview set up to only be 2 lines and ellipsized
         textView.setText(mValues.getItem(position).getTitle());
 
         // find the image
@@ -63,7 +64,7 @@ public class ImageAdapter extends BaseAdapter {
         if (posterpath != null) {
             Picasso.with(mContext).load(posterpath).into(imageView);
         } else {
-            //throw up some generic image...
+            //throw up some generic image... Should only be used with testing
             imageView.setImageResource(R.drawable.android_logo);
         }
 

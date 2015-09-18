@@ -1,14 +1,10 @@
 package app.com.example.android.popularmovies;
 
-import android.graphics.Bitmap;
-import android.widget.ImageView;
-
-import java.util.Date;
-
 /**
  * Created by rclark on 9/11/2015.
  * Trivial class to store the movie data for an individual movie.
  * Essentially use this as a C style structure.
+ * This class represents an individual movie dataset
  */
 public class MovieItem {
     private String mTitle;
@@ -18,7 +14,7 @@ public class MovieItem {
     private String mReleaseDate;
     private Boolean mFavorite;
     private String mMovieID;
-    private int mRuntime;           //not used at moment
+    private int mRuntime;           //not used at moment - maybe in future.
 
     //In case we want to instantiate directly with data
     public MovieItem(String movieID, String title, String poster, String synopsis, String rating, String releaseDate, Boolean favorite, int runtime) {

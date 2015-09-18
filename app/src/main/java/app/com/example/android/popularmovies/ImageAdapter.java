@@ -9,6 +9,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 /**
  * Created by rclark on 8/29/2015.
  * Pulled from mkyong example for an image adapter class for use with gridview
@@ -54,9 +56,9 @@ public class ImageAdapter extends BaseAdapter {
                 .findViewById(R.id.grid_item_image);
 
         //TODO - check below
-        Bitmap bm = mValues.getItem(position).getBitmap();
-        if (bm != null) {
-            imageView.setImageBitmap(bm);
+        String posterpath = mValues.getItem(position).getPosterPath();
+        if (posterpath != null) {
+            Picasso.with(mContext).load(posterpath).into(imageView);
         } else {
             //throw up some generic image...
             imageView.setImageResource(R.drawable.android_logo);

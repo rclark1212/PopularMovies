@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.squareup.picasso.Picasso;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -101,22 +103,15 @@ public class MovieDetailFragment extends Fragment {
         ImageView imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
         if (imageView != null) {
             //TODO - check below
-            Bitmap bm = MainActivity.mData.getItem(position).getBitmap();
-            if (bm != null) {
-                imageView.setImageBitmap(bm);
+            String posterpath = MainActivity.mData.getItem(position).getPosterPath();
+            if (posterpath != null) {
+                Picasso.with(getContext()).load(posterpath).into(imageView);
             } else {
                 //throw up some generic image...
                 imageView.setImageResource(R.drawable.android_logo);
             }
         }
 
-
-        //And now runtime
-        message = "" + MainActivity.mData.getItem(position).getRuntime() + " " + getString(R.string.minutes);
-        text = (TextView) getActivity().findViewById(R.id.text_detail_runtime);
-        if (text != null) {
-            text.setText(message.toCharArray(), 0, message.length());
-        }
 
         //finaly, deal with the favorites checkbox state
         CheckBox checkbox_favs = (CheckBox) getActivity().findViewById(R.id.checkbox_detail_favorite);

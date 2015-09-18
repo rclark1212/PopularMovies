@@ -13,19 +13,17 @@ import java.util.Date;
 public class MovieItem {
     private String mTitle;
     private String mPosterPath;
-    private Bitmap mBitmap;
     private String mSynopsis;
     private double mRating;
     private String mReleaseDate;
     private Boolean mFavorite;
     private String mMovieID;
-    private int mRuntime;
+    private int mRuntime;           //not used at moment
 
     //In case we want to instantiate directly with data
-    public MovieItem(String movieID, String title, String poster, Bitmap bitmap, String synopsis, double rating, String releaseDate, Boolean favorite, int runtime) {
+    public MovieItem(String movieID, String title, String poster, String synopsis, double rating, String releaseDate, Boolean favorite, int runtime) {
         mTitle = title;
         mPosterPath = poster;
-        mBitmap = bitmap;
         mSynopsis = synopsis;
         mRating = rating;
         mReleaseDate = releaseDate;
@@ -34,15 +32,12 @@ public class MovieItem {
         mMovieID = movieID;
     }
 
+    //Implement the getters...
     public String getTitle() {
         return mTitle;
     }
 
-    public String getPosterPath() {
-        return mPosterPath;
-    }
-
-    public Bitmap getBitmap() { return mBitmap; }
+    public String getPosterPath() { return mPosterPath; }
 
     public String getSynopsis() {
         return mSynopsis;

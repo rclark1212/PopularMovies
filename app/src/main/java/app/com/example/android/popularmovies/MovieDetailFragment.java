@@ -80,17 +80,13 @@ public class MovieDetailFragment extends Fragment {
         }
 
         //Then release date
-        //DateFormat df = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
-        //message = df.format(MainActivity.mData.getItem(position).getReleaseDate());
         message = MainActivity.mData.getItem(position).getReleaseDate();
         text = (TextView) getActivity().findViewById(R.id.text_detail_releasedate);
         if (text != null) {
             text.setText(message.toCharArray(), 0, message.length());
         }
 
-        //Then release year...
-        //Calendar calendar = Calendar.getInstance();
-        //calendar.setTime(MainActivity.mData.getItem(position).getReleaseDate());
+        //Then release year in bigger font (just first 4 chars)
         if (message.length() > 4) {
             message = message.substring(0, 4);
         }
@@ -99,10 +95,17 @@ public class MovieDetailFragment extends Fragment {
             text.setText(message.toCharArray(), 0, message.length());
         }
 
+        //Then user rating... (and append "user rating" to it
+        message = MainActivity.mData.getItem(position).getRating() + " " + getResources().getString(R.string.user_rating);
+        text = (TextView) getActivity().findViewById(R.id.text_detail_rating);
+        if (text != null) {
+            text.setText(message.toCharArray(), 0, message.length());
+        }
+
         //Then image...
         ImageView imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
         if (imageView != null) {
-            //TODO - check below
+            //Use the clever background jpg loading facility of picasso...
             String posterpath = MainActivity.mData.getItem(position).getPosterPath();
             if (posterpath != null) {
                 Picasso.with(getContext()).load(posterpath).into(imageView);
@@ -111,7 +114,6 @@ public class MovieDetailFragment extends Fragment {
                 imageView.setImageResource(R.drawable.android_logo);
             }
         }
-
 
         //finaly, deal with the favorites checkbox state
         CheckBox checkbox_favs = (CheckBox) getActivity().findViewById(R.id.checkbox_detail_favorite);

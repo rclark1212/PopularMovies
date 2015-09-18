@@ -24,6 +24,6 @@ used for the grid layout element (is the grid element)
         android:text="dummy"
         android:layout_marginTop="0sp"
         android:layout_below="@id/grid_item_image"
-        android:textSize="14sp" >
+        android:textSize="12sp" >
     </TextView>
 </RelativeLayout>

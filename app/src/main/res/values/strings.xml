@@ -14,5 +14,5 @@
     <string name="about_text2">This product uses the TMDb API but is not endorsed or certified by TMDb.</string>
     <string name="Favorite">Favorite</string>
     <string name="Search">Search</string>
-    <string name="minutes">minutes</string>
+    <string name="user_rating">user rating</string>
 </resources>

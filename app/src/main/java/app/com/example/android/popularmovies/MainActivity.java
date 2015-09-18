@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -143,7 +144,7 @@ public class MainActivity extends AppCompatActivity
             //pw.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
             // PopupWindow to dismiss when when touched outside
-            pw.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+            pw.setBackgroundDrawable(new ColorDrawable(Color.GRAY));
 
             pw.showAtLocation(popupParent, Gravity.CENTER, 0, 0);
 

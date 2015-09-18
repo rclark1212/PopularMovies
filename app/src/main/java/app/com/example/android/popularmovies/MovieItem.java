@@ -14,14 +14,14 @@ public class MovieItem {
     private String mTitle;
     private String mPosterPath;
     private String mSynopsis;
-    private double mRating;
+    private String mRating;
     private String mReleaseDate;
     private Boolean mFavorite;
     private String mMovieID;
     private int mRuntime;           //not used at moment
 
     //In case we want to instantiate directly with data
-    public MovieItem(String movieID, String title, String poster, String synopsis, double rating, String releaseDate, Boolean favorite, int runtime) {
+    public MovieItem(String movieID, String title, String poster, String synopsis, String rating, String releaseDate, Boolean favorite, int runtime) {
         mTitle = title;
         mPosterPath = poster;
         mSynopsis = synopsis;
@@ -43,7 +43,7 @@ public class MovieItem {
         return mSynopsis;
     }
 
-    public double getRating() {
+    public String getRating() {
         return mRating;
     }
 

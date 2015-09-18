@@ -61,10 +61,8 @@ public class MovieData {
             //hack in some fake data...
             String title = "TestTitle #" + i;
             String synopsis = "This movie (generic title #" + i + " is a hack test of using objects for the data structures. It is a boring and useless story of test data which continues to be boring and useless.";
-            double rating = (double)i/5.;
+            String rating = "" + (double)i/5.;
             String release = "2012-3-3";
-            String posterpath = "";
-            //Bitmap posterbm = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.android_logo);
             Boolean favorite = false;
             MovieItem movie = new MovieItem(""+i,title, null, synopsis,rating,release,favorite, i*30);
             mMovies.add(movie);
@@ -305,7 +303,7 @@ public class MovieData {
         JSONObject moviesJson = new JSONObject(moviesJsonStr);
         JSONArray moviesArray = moviesJson.getJSONArray(TMDB_LIST);
 
-        //master array should have already been cleared
+        //master mMovies array should have already been cleared
 
         //and now start reading in the data...
         for(int i = 0; i < moviesArray.length(); i++) {
@@ -319,57 +317,17 @@ public class MovieData {
             String releaseDate = jMovie.getString(TMDB_RELEASEDATE);
             String posterPath = jMovie.getString(TMDB_POSTER);
             String movieID = jMovie.getString(TMDB_ID);
+            String rating = jMovie.getString(TMDB_RATING);
 
             //create the image file path
-            Bitmap moviebitmap = null;
             String imgpath = mBaseURL + mImageSizePath + posterPath;
 
-            /*
-            //make the URL - and read the info...
-            try
-            {
-                Log.v(LOG_TAG, "Trying to load bitmap: " + imgpath);
-                moviebitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver() , Uri.parse(imgpath));
-            }
-            catch (Exception e)
-            {
-                Log.v(LOG_TAG, "Failure getting bitmap: " + imgpath + " error " + e);
-            }
-            */
-
-            MovieItem movie = new MovieItem(movieID, title, imgpath, synopsis, 0, releaseDate, false, 0);
+            MovieItem movie = new MovieItem(movieID, title, imgpath, synopsis, rating, releaseDate, false, 0);
             mMovies.add(movie);
 
-            //TODO BELOW
-            /*
-
-            // The date/time is returned as a long.  We need to convert that
-            // into something human-readable, since most people won't read "1400356800" as
-            // "this saturday".
-            long dateTime;
-            // Cheating to convert this to UTC time, which is what we want anyhow
-            dateTime = dayTime.setJulianDay(julianStartDay+i);
-            day = getReadableDateString(dateTime);
-
-            // description is in a child array called "weather", which is 1 element long.
-            JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
-            description = weatherObject.getString(OWM_DESCRIPTION);
-
-            // Temperatures are in a child object called "temp".  Try not to name variables
-            // "temp" when working with temperature.  It confuses everybody.
-            JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
-            double high = temperatureObject.getDouble(OWM_MAX);
-            double low = temperatureObject.getDouble(OWM_MIN);
-
-            resultStrs[i] = day + " - " + description; */
         }
 
-//        for (String s : resultStrs) {
-  //          //Log.v(LOG_TAG, "Movie entry: " + s);
-    //    }
-        return;// resultStrs;
-
+        return;
     }
 
-    //TODO
 }

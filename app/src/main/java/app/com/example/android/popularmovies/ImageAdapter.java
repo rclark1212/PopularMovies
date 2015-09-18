@@ -49,13 +49,16 @@ public class ImageAdapter extends BaseAdapter {
         TextView textView = (TextView) gridView
                 .findViewById(R.id.grid_item_label);
 
+        //TODO - ugly to have clipped text. If text does not fit in textView, cut text until it
+        //does fit and add "...".
         textView.setText(mValues.getItem(position).getTitle());
 
-        // set image based on selected text
+        // find the image
         ImageView imageView = (ImageView) gridView
                 .findViewById(R.id.grid_item_image);
 
-        //TODO - check below
+        //Set the image based on position (path to image already saved off)
+        //Use the clever picasso method for background image loading here...
         String posterpath = mValues.getItem(position).getPosterPath();
         if (posterpath != null) {
             Picasso.with(mContext).load(posterpath).into(imageView);

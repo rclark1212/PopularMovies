@@ -28,7 +28,6 @@ import android.widget.Toast;
 public class MovieListFragment extends Fragment {
     OnMovieSelectedListener mCallback;
 
-    public final static String EXTRA_MESSAGE = "app.com.example.android.popularmovies.MESSAGE";
     private GridView m_grid;
     private ImageAdapter m_my_array_adapter;
 
@@ -56,11 +55,6 @@ public class MovieListFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //once a grid item is clicked, open up or update the detail view
-                /*
-                //Intent intent = new Intent(getActivity(), DetailActivity.class);
-                String message = ((TextView) view.findViewById(R.id.grid_item_label)).getText().toString();
-                intent.putExtra(EXTRA_MESSAGE, message + " " + message); //TODO
-                startActivity(intent); */
                 mCallback.onMovieSelected(position);
             }
         });
@@ -79,7 +73,7 @@ public class MovieListFragment extends Fragment {
         // (We do this during onStart because at the point the listview is available.)
         if (getFragmentManager().findFragmentById(R.id.movielist_fragment) != null) {
             //highlight...
-            //TODO
+            //TODO - actually don't do this. Don't like the visual impact of selection. Be stateless...
         }
     }
 
@@ -105,7 +99,7 @@ public class MovieListFragment extends Fragment {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String ordering = prefs.getString(getString(R.string.pref_ordering_key), getString(R.string.pref_ordering_default));
 
-        //throw some hack data up...
+        //throw some hack data up... For test only.
         //MainActivity.mData.clear();
         //MainActivity.mData.hackPopulateList(getContext());
 
@@ -126,11 +120,12 @@ public class MovieListFragment extends Fragment {
                 return "";
             }
 
+            // And fetch the data...
             MainActivity.mData.loadTMDBFromNetwork(ordering[0], getResources().getString(R.string.TMDB_API_KEY));
             return "";
         }
 
-        //And now to repopulate with real data
+        //And now to repopulate list with real data
         protected void onPostExecute(String dummy) {
             //update the global adapter
             m_my_array_adapter.notifyDataSetChanged();

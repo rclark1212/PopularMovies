@@ -57,6 +57,13 @@ public class MovieDetailFragment extends Fragment {
         } else if (mCurrentPosition != -1) {
             // Set article based on saved instance state defined during onCreateView
             updateMovieView(mCurrentPosition);
+        } else {
+            // This should only be hit by tablet on initial conditions (app launch). Nothign selected.
+            // A couple options here - we could blank this fragment. But that would look weird.
+            // We could put up a screen saying "please select a movie". But kind of redundant.
+            // Instead, how about just setting the detail screen to the first movie in the list?
+            mCurrentPosition = 0;
+            updateMovieView(mCurrentPosition);
         }
     }
 

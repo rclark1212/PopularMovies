@@ -22,8 +22,10 @@ used for the grid layout element (is the grid element)
         android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:text="dummy"
+        android:ellipsize="end"
+        android:maxLines="2"
         android:layout_marginTop="0sp"
         android:layout_below="@id/grid_item_image"
-        android:textSize="12sp" >
+        android:textSize="13sp" >
     </TextView>
 </RelativeLayout>

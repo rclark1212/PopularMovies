@@ -1,5 +1,6 @@
 package app.com.example.android.popularmovies;
 
+import android.app.SearchManager;
 import android.content.res.Configuration;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
@@ -50,6 +51,8 @@ public class MainActivity extends AppCompatActivity
     public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;   //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
     public static MovieData mData;                              //this object will be used by other clases... make it public
                                                                 //this is the primary database of movies data
+    private int mLastSelected;                                  //last selected movie
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -176,19 +179,38 @@ public class MainActivity extends AppCompatActivity
             //and commit
             transaction.commit();
         }
-
+        mLastSelected = position;
     }
 
+    //
     //handle the favorites checkbox here
+    //
     public void onCheckboxClicked(View view) {
         //TODO
         CheckBox favorites_check = (CheckBox) view.findViewById(R.id.checkbox_detail_favorite);
         if (favorites_check != null)
         {
-            boolean checked = favorites_check.isChecked();
-        }
+            Boolean checked = favorites_check.isChecked();
 
-        //and now do something with it (save/unsave)
+            //and save this off
+            mData.getItem(mLastSelected).setFavorite(checked);
+        }
     }
 
+    //
+    //handle the search button here
+    //
+    public void onSearchClick(View v) {
+        //launch search intent...
+
+        //throw movie at the end
+        String searchStr = mData.getItem(mLastSelected).getTitle() + " movie";
+
+        Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
+        intent.putExtra(SearchManager.QUERY, searchStr);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
+
+    }
 }

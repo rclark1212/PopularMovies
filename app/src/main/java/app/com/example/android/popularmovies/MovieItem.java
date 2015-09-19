@@ -54,4 +54,10 @@ public class MovieItem {
     public int getRuntime() { return mRuntime; }
 
     public String getMovieID() { return mMovieID; }
+
+    //and one setter
+    public void setFavorite(Boolean bFavorite) {
+        mFavorite = bFavorite;
+    }
+
 }

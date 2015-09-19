@@ -6,10 +6,12 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.squareup.picasso.Picasso;
@@ -40,8 +42,9 @@ public class MovieDetailFragment extends Fragment {
             mCurrentPosition = savedInstanceState.getInt(ARG_POSITION);
         }
 
-        // Inflate the layout for this fragment
+        // Inflate the layout for this fragment and return
         return inflater.inflate(R.layout.movie_detail, container, false);
+
     }
 
     @Override
@@ -67,7 +70,6 @@ public class MovieDetailFragment extends Fragment {
             updateMovieView(0);
         }
     }
-
 
     public void updateMovieView(int position) {
 
@@ -123,7 +125,7 @@ public class MovieDetailFragment extends Fragment {
             }
         }
 
-        //finaly, deal with the favorites checkbox state
+        //finally, set the favorites checkbox state
         CheckBox checkbox_favs = (CheckBox) getActivity().findViewById(R.id.checkbox_detail_favorite);
         if (checkbox_favs != null) {
             checkbox_favs.setChecked(MainActivity.mData.getItem(position).getFavorite());

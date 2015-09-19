@@ -85,6 +85,7 @@ Used for the detailed movie view
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/Search"
+            android:onClick="onSearchClick"
             android:id="@+id/button_detail_search"
             android:layout_below="@id/checkbox_detail_favorite"
             android:layout_alignLeft="@id/text_detail_year"

@@ -339,4 +339,13 @@ public class MovieData {
         return;
     }
 
+    // TODO - save off favorites, load favorites, add favorite, remove favorite, update mDataWFavorites
+    // save at app exit
+    // load at app launch
+    // add/remove at checkbox click
+    // update at all mData loads
+    // seems like another class could be in order here (just an array of movieIDs as data set)
+    // or can be part of the movies class and mostly embedded/hidden away
+    // if part of movie class, only have a store and load. store on a .clear. load on an update.
+
 }

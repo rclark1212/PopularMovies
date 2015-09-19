@@ -1,6 +1,9 @@
 package app.com.example.android.popularmovies;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -14,6 +17,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by rclark on 9/11/2015.
@@ -39,12 +44,14 @@ public class MovieData {
     private String mBaseURL;                //Base URL for images. Per TMDB API docs, this generally only needs to be checked once...
                                             //sure it might change if you left app open for months but deal with this on a production app. (would refresh if I hit error loading bitmap)
     private String mImageSizePath;          //to be used with mBaseURL (size of poster to load)
+    private Context mCtx;                   //Used for shared preferences. This class already pretty purpose targeted so okay.
 
-    public MovieData() {
+    public MovieData(Context ctx) {
         //just init the list here...
         //note this is the main database of movies we load
         mMovies = new ArrayList<MovieItem>();
         mBaseURL = null;
+        mCtx = ctx;
     }
 
     public void hackPopulateList() {
@@ -72,6 +79,7 @@ public class MovieData {
 
     //Clears the array...
     public void clear() {
+        saveFavorites();
         mMovies.clear();
     }
 
@@ -161,6 +169,7 @@ public class MovieData {
         try {
             //now parse the movie json data captured earlier
             getMovieDataFromJson(moviesJsonStr);
+            loadFavorites();
         }
         catch (JSONException e)
         {
@@ -347,5 +356,72 @@ public class MovieData {
     // seems like another class could be in order here (just an array of movieIDs as data set)
     // or can be part of the movies class and mostly embedded/hidden away
     // if part of movie class, only have a store and load. store on a .clear. load on an update.
+
+    //
+    // Scan through main array and save off all the movieIDs which are marked as favorite
+    // Saved as a comma delimited preference string of MovieIDs
+    //
+    private void saveFavorites() {
+
+        //Set<String> favorites = new HashSet<String>();      //to store favorite MovieIDs and store into prefs
+
+        // as the list of movies may change depending on search and we don't want to overwrite favorites
+        // that are defined for movies not in the list, first read the current favorites list and add those
+        // movies which are not contained within
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mCtx);
+        Set<String> favorites = pref.getStringSet(mCtx.getResources().getString(R.string.favorites_list), null);
+
+        // loop through the current movies. if movie not contained in oldfavorites, add the old favorite
+        // to the new set (preserve it)
+        // and yes, as commented below, this could  be terribly inefficient but working with a small
+        // dataset.
+        for (int i = 0; i < mMovies.size(); i++) {
+            // get the movieID
+            String movieID = mMovies.get(i).getMovieID();
+            //is it not in current favorites list already?
+            if (favorites.contains(movieID) == true) {
+                // this movie already in favorites list..
+                // so either do nothing (keep it). or remove it.
+                if (mMovies.get(i).getFavorite() == false) {
+                    // no longer a favorite. Remove it
+                    favorites.remove(movieID);
+                }
+            } else {
+                // movie not in favorites
+                if (mMovies.get(i).getFavorite() == true) {
+                    //need to add it
+                    favorites.add(movieID);
+                }
+            }
+        }
+
+        //and now save off this string set
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putStringSet(mCtx.getResources().getString(R.string.favorites_list), favorites);
+        editor.commit();
+    }
+
+    //
+    // Load the list of favorite movieIDs and apply/update favorite status of the main array
+    //
+    private void loadFavorites() {
+        //Get the string from shared preferences
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mCtx);
+        Set<String> favorites = pref.getStringSet(mCtx.getResources().getString(R.string.favorites_list),null);
+
+        //Now scan through mMovies and if a match, set favorite.
+        //And yes, this could be *terribly* inefficient O(n^2).
+        //But will assume that Set is ordered/hashed for searching and .contains is efficient.
+        //If not, would order the list and do a binary search at minimum.
+
+        // loop through all the movies...
+        for (int i = 0; i < mMovies.size(); i++) {
+            String movieID = mMovies.get(i).getMovieID();
+
+            //is this movieID in our favorites set?
+            mMovies.get(i).setFavorite(favorites.contains(movieID));
+        }
+
+    }
 
 }

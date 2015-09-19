@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity
         //first create the data if it does not already exist...
         if (mData == null)
         {
-            mData = new MovieData();
+            mData = new MovieData(this);
         }
 
         //Lets swap the orientation if appropriate here...

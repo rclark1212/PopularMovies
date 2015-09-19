@@ -26,18 +26,8 @@ Usage should be self-explanitory. Launch app and you will see a gridview
 of movies. Select a movie and a detail screen will show for the movie.
 
 There is still missing functionality including:
-- storing favorite selection
 - sorting by favorite
-- search button
 - trailer and reviews in the detail
-
-## Contributing
-
-1. Fork it!
-2. Create your feature branch: `git checkout -b my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin my-new-feature`
-5. Submit a pull request :D
 
 ## History
 

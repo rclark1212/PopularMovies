@@ -11,6 +11,7 @@
     <string name="pref_ordering_default" translatable="false">1</string>
     <string name="pref_popularity">Popularity</string>
     <string name="pref_rating">Rating</string>
+    <string name="pref_favorites">Favorites</string>
     <string name="about_text1">Popular Movies App - written for Udacity Nanodegree Program - by Rich Clark</string>
     <string name="about_text2">This product uses the TMDb API but is not endorsed or certified by TMDb.</string>
     <string name="Favorite">Favorite</string>

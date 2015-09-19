@@ -3,11 +3,13 @@
     <string-array name="pref_ordering_listArray">
         <item>@string/pref_popularity</item>
         <item>@string/pref_rating</item>
+        <item>@string/pref_favorites</item>
     </string-array>
 
     <string-array name="pref_ordering_listValues">
         <item>1</item>
         <item>2</item>
+        <item>3</item>
     </string-array>
 
 </resources>

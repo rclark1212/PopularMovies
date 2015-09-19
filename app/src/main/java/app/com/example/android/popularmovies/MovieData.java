@@ -93,35 +93,29 @@ public class MovieData {
         // Will contain the raw JSON response as a string.
         String moviesJsonStr = null;
 
-        Uri.Builder builder = new Uri.Builder();
         String sortby = TMDB_SORTBY_POPULARITY;     //default to popularity search
 
-        if (ordering.equals("2"))
-        {
+        if (ordering.equals("2")) {                 //sort by rating
             sortby = TMDB_SORTBY_RATING;            //but if by rating (per settings), sort by rating
         }
 
+        /*
+            A note about favorites here...
+            Two options for loading favorites really
+            The most efficient option since we have the list of favorite movieIDs saved
+            away is to create a 3rd query type which just directly loads the movie based
+            on movieID.
+            The second, less efficient option (but less code to write) is to recognize data
+            set is limited to the discovery query return of popularity/rating queries (2 queries).
+            So we could just build a big list by quering twice (both ways) and then discarding
+            the movies that don't match favorites.
+            Now the downside of the second approach is if discovery/popularity queries change,
+            you will lose your favorites. So will go ahead and take first approach...
+
+         */
+
         //need to read both configuration (to get image url base)
         //and make the discovery query...
-        //build discovery URL first
-        // Construct the URL for the TMDB query
-        // Possible parameters are avaiable at TMDB API page, at
-        // http://http://docs.themoviedb.apiary.io/#reference
-        builder.scheme("http")
-                .authority(TMDB_API_BASE)
-                .appendPath(TMDB_VERSION)
-                .appendPath(TMDB_DISCOVERY)
-                .appendPath(TMDB_MOVIES)
-                .appendQueryParameter(TMDB_API_KEY, apikey)
-                //deal with ordering..
-                // 1 = popularity, 2 = rating
-                .appendQueryParameter(TMDB_SORT_ORDER, sortby);
-
-        String urlbuild = builder.build().toString();
-
-        Log.v(LOG_TAG, "Built query string: " + urlbuild);
-
-        moviesJsonStr = getTMDBDataFromURL(urlbuild);
 
         //Do we have a base URL yet? (for loading images)
         if (mBaseURL == null) {
@@ -136,7 +130,7 @@ public class MovieData {
                     .appendPath(TMDB_CONFIGURATION)
                     .appendQueryParameter(TMDB_API_KEY, apikey);
 
-            urlbuild = buildercfg.build().toString();
+            String urlbuild = buildercfg.build().toString();
 
             Log.v(LOG_TAG, "getting config URL string: " + urlbuild);
 
@@ -156,26 +150,90 @@ public class MovieData {
                     //don't return here - try to get movie data anyway (will not get images though)
                 }
             }
-
         }
 
-        //set up something to parse into
-        //and parse
-        //if error, just return
-        if (moviesJsonStr == null) {
-            return;
-        }
+        //Okay - deal with favorites here (or else process a discovery query
+        if (ordering.equals("3")) {                 //load favorites
 
-        try {
-            //now parse the movie json data captured earlier
-            getMovieDataFromJson(moviesJsonStr);
-            loadFavorites();
-        }
-        catch (JSONException e)
-        {
-            Log.e(LOG_TAG, "JSON Error parsing movie data ", e);
+            //  First get the favorites
+            String[] favorites = getFavorites();
 
-            return;
+            //and iterate through the favorites
+            for (int i = 0; i < favorites.length; i++) {
+                //build movie query URL
+                // Possible parameters are avaiable at TMDB API page, at
+                // http://http://docs.themoviedb.apiary.io/#reference
+                Uri.Builder builder = new Uri.Builder();
+                builder.scheme("http")
+                        .authority(TMDB_API_BASE)
+                        .appendPath(TMDB_VERSION)
+                        .appendPath(TMDB_MOVIES)
+                        .appendPath(favorites[i])
+                        .appendQueryParameter(TMDB_API_KEY, apikey);
+
+                String urlbuild = builder.build().toString();
+
+                Log.v(LOG_TAG, "Built favorites query string: " + urlbuild);
+
+                moviesJsonStr = getTMDBDataFromURL(urlbuild);
+
+                //set up something to parse into
+                //and parse
+                //if error, just return
+                if (moviesJsonStr == null) {
+                    return;
+                }
+
+                try {
+                    //now parse the movie json data captured earlier
+                    getMovieDataFromJson(moviesJsonStr, false);
+                    loadFavorites();                    //note that every movie a favorite. We could optimize
+                                                        //here and just blanket set every favorite flag but
+                                                        //like the code cleanliness of just calling function again
+                } catch (JSONException e) {
+                    Log.e(LOG_TAG, "JSON Error parsing movie data ", e);
+
+                    return;
+                }
+            }
+        } else {                                    //else is one of the discovery queries
+            //build discovery URL first
+            // Construct the URL for the TMDB query
+            // Possible parameters are avaiable at TMDB API page, at
+            // http://http://docs.themoviedb.apiary.io/#reference
+            Uri.Builder builder = new Uri.Builder();
+            builder.scheme("http")
+                    .authority(TMDB_API_BASE)
+                    .appendPath(TMDB_VERSION)
+                    .appendPath(TMDB_DISCOVERY)
+                    .appendPath(TMDB_MOVIES)
+                    .appendQueryParameter(TMDB_API_KEY, apikey)
+                            //deal with ordering..
+                            // 1 = popularity, 2 = rating
+                    .appendQueryParameter(TMDB_SORT_ORDER, sortby);
+
+            String urlbuild = builder.build().toString();
+
+            Log.v(LOG_TAG, "Built query string: " + urlbuild);
+
+            moviesJsonStr = getTMDBDataFromURL(urlbuild);
+
+            //set up something to parse into
+            //and parse
+            //if error, just return
+            if (moviesJsonStr == null) {
+                return;
+            }
+
+            try {
+                //now parse the movie json data captured earlier
+                getMovieDataFromJson(moviesJsonStr, true);
+                loadFavorites();                    //and parse/apply favorites
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, "JSON Error parsing movie data ", e);
+
+                return;
+            }
         }
     }
 
@@ -300,8 +358,11 @@ public class MovieData {
         for both config and discovery). However the functionality of the code is limited enough
         to make it a low ROI.
         Also uses class globals mBaseURL, mImageSizePath to construct the url for image loading
+        Note that the routine handles both discovery queries (which adds an array to moviesDB
+        Or simple movie queries (which adds one element)
+        For quering an array, pass in true for bArray. For a single movie, pass in false
      */
-    private void getMovieDataFromJson(String moviesJsonStr)
+    private void getMovieDataFromJson(String moviesJsonStr, Boolean bArray)
             throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
@@ -316,15 +377,29 @@ public class MovieData {
 
         //First parse out the movies...
         JSONObject moviesJson = new JSONObject(moviesJsonStr);
-        JSONArray moviesArray = moviesJson.getJSONArray(TMDB_LIST);
+        JSONArray moviesArray = null;
+        int readLength = 1;
+
+        //if we are parsing an array, get it and reset the length of the read
+        if (bArray == true) {
+            moviesArray = moviesJson.getJSONArray(TMDB_LIST);
+            readLength = moviesArray.length();
+        }
 
         // mMovies array should have already been cleared
 
         //and now start reading in the data...
-        for(int i = 0; i < moviesArray.length(); i++) {
+        for(int i = 0; i < readLength; i++) {
 
             // Get the JSON object representing the movie
-            JSONObject jMovie = moviesArray.getJSONObject(i);
+            JSONObject jMovie;
+
+            if (bArray != true) {
+                //urp - single movie query...
+                jMovie = moviesJson;
+            } else {
+                jMovie = moviesArray.getJSONObject(i);
+            }
 
             //extract what we need
             String title = jMovie.getString(TMDB_TITLE);
@@ -348,16 +423,16 @@ public class MovieData {
         return;
     }
 
-    // TODO - save off favorites, load favorites, add favorite, remove favorite, update mDataWFavorites
-    // save at app exit
-    // load at app launch
-    // add/remove at checkbox click
-    // update at all mData loads
-    // seems like another class could be in order here (just an array of movieIDs as data set)
-    // or can be part of the movies class and mostly embedded/hidden away
-    // if part of movie class, only have a store and load. store on a .clear. load on an update.
+    //
+    // General favorites notes:
+    // Save/load favorites from shared preferences. Store a list of MovieIDs as favorites.
+    // Now TMDB has a favorites function but you have to log in to use it. Allow favorites
+    // without requiring signing up for an account.
+    // Save off the favorites list on a .clear. Load favorites list on an update.
+    //
 
     //
+    // Save favorites:
     // Scan through main array and save off all the movieIDs which are marked as favorite
     // Saved as a comma delimited preference string of MovieIDs
     //
@@ -403,6 +478,8 @@ public class MovieData {
 
     //
     // Load the list of favorite movieIDs and apply/update favorite status of the main array
+    // Note that this routine both "gets" the favorite list from preferences as well as
+    // processes favorites against the currently loaded movie database
     //
     private void loadFavorites() {
         //Get the string from shared preferences
@@ -421,7 +498,19 @@ public class MovieData {
             //is this movieID in our favorites set?
             mMovies.get(i).setFavorite(favorites.contains(movieID));
         }
+    }
 
+    //
+    // Gets favorites (and returns as a string array)
+    // Needed for sorting by favorites option.
+    //
+    private String[] getFavorites() {
+        //Get the string from shared preferences
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mCtx);
+        Set<String> favorites = pref.getStringSet(mCtx.getResources().getString(R.string.favorites_list),null);
+
+        //and return as a string array
+        return favorites.toArray(new String[favorites.size()]);
     }
 
 }

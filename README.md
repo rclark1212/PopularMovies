@@ -26,7 +26,6 @@ Usage should be self-explanitory. Launch app and you will see a gridview
 of movies. Select a movie and a detail screen will show for the movie.
 
 There is still missing functionality including:
-- sorting by favorite
 - trailer and reviews in the detail
 
 ## History

@@ -75,6 +75,7 @@ Used for the detailed movie view
             android:layout_height="wrap_content"
             android:text="@string/Favorite"
             android:id="@+id/checkbox_detail_favorite"
+            style="?android:attr/starStyle"
             android:onClick="onCheckboxClicked"
             android:layout_below="@id/text_detail_rating"
             android:layout_alignLeft="@id/text_detail_year"

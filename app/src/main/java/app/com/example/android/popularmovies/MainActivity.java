@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity
     public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;   //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
     public static MovieData mData;                              //this object will be used by other clases... make it public
                                                                 //this is the primary database of movies data
-    private int mLastSelected;                                  //last selected movie
+    public static int mLastSelected = -1;                       //last selected movie
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +129,9 @@ public class MainActivity extends AppCompatActivity
             //launch settings
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
+            //if view ordering changed, should really clear out last selected flag...
+            //Do it for any view ordering change at this point.
+            mLastSelected = -1;
             return true;
         } else if (id == R.id.action_about) {
             //show the about box...

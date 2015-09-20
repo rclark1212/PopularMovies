@@ -31,6 +31,7 @@ public class MovieListFragment extends Fragment {
 
     private GridView m_grid;
     private ImageAdapter m_my_array_adapter;
+    private int mSelected;
 
     //Put in an interface for container activity to implement so that fragment can deliver messages
     public interface OnMovieSelectedListener {
@@ -56,6 +57,7 @@ public class MovieListFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //once a grid item is clicked, open up or update the detail view
+                mSelected = position;
                 mCallback.onMovieSelected(position);
             }
         });
@@ -137,6 +139,12 @@ public class MovieListFragment extends Fragment {
             //update the global adapter
             m_my_array_adapter.notifyDataSetChanged();
             m_grid.invalidateViews();   //hmm - I would expect line above to do this. But it does not :(
+
+            //also need to update the detail view if we are in a 2pane detail tablet view
+            //first, are we in 2pane view? (does the movielist fragment exist?
+            if (getFragmentManager().findFragmentById(R.id.movielist_fragment) != null) {
+                mCallback.onMovieSelected(MainActivity.mLastSelected);
+            }
         }
     }
 }

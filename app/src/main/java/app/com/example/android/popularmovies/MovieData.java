@@ -63,7 +63,8 @@ public class MovieData {
             String rating = "" + (double)i/5.;
             String release = "2012-3-3";
             Boolean favorite = false;
-            MovieItem movie = new MovieItem(""+i,title, null, synopsis,rating,release,favorite, i*30);
+            String movieID = ""+i;
+            MovieItem movie = new MovieItem(movieID,title, null, synopsis,rating,release,favorite, i*30);
             mMovies.add(movie);
         }
     }
@@ -158,42 +159,45 @@ public class MovieData {
             //  First get the favorites
             String[] favorites = getFavorites();
 
-            //and iterate through the favorites
-            for (int i = 0; i < favorites.length; i++) {
-                //build movie query URL
-                // Possible parameters are avaiable at TMDB API page, at
-                // http://http://docs.themoviedb.apiary.io/#reference
-                Uri.Builder builder = new Uri.Builder();
-                builder.scheme("http")
-                        .authority(TMDB_API_BASE)
-                        .appendPath(TMDB_VERSION)
-                        .appendPath(TMDB_MOVIES)
-                        .appendPath(favorites[i])
-                        .appendQueryParameter(TMDB_API_KEY, apikey);
+            //Check if there are any favorites...
+            if (favorites != null) {
+                //and iterate through the favorites
+                for (int i = 0; i < favorites.length; i++) {
+                    //build movie query URL
+                    // Possible parameters are avaiable at TMDB API page, at
+                    // http://http://docs.themoviedb.apiary.io/#reference
+                    Uri.Builder builder = new Uri.Builder();
+                    builder.scheme("http")
+                            .authority(TMDB_API_BASE)
+                            .appendPath(TMDB_VERSION)
+                            .appendPath(TMDB_MOVIES)
+                            .appendPath(favorites[i])
+                            .appendQueryParameter(TMDB_API_KEY, apikey);
 
-                String urlbuild = builder.build().toString();
+                    String urlbuild = builder.build().toString();
 
-                Log.v(LOG_TAG, "Built favorites query string: " + urlbuild);
+                    Log.v(LOG_TAG, "Built favorites query string: " + urlbuild);
 
-                moviesJsonStr = getTMDBDataFromURL(urlbuild);
+                    moviesJsonStr = getTMDBDataFromURL(urlbuild);
 
-                //set up something to parse into
-                //and parse
-                //if error, just return
-                if (moviesJsonStr == null) {
-                    return;
-                }
+                    //set up something to parse into
+                    //and parse
+                    //if error, just return
+                    if (moviesJsonStr == null) {
+                        return;
+                    }
 
-                try {
-                    //now parse the movie json data captured earlier
-                    getMovieDataFromJson(moviesJsonStr, false);
-                    loadFavorites();                    //note that every movie a favorite. We could optimize
-                                                        //here and just blanket set every favorite flag but
-                                                        //like the code cleanliness of just calling function again
-                } catch (JSONException e) {
-                    Log.e(LOG_TAG, "JSON Error parsing movie data ", e);
+                    try {
+                        //now parse the movie json data captured earlier
+                        getMovieDataFromJson(moviesJsonStr, false);
+                        loadFavorites();                    //note that every movie a favorite. We could optimize
+                        //here and just blanket set every favorite flag but
+                        //like the code cleanliness of just calling function again
+                    } catch (JSONException e) {
+                        Log.e(LOG_TAG, "JSON Error parsing movie data ", e);
 
-                    return;
+                        return;
+                    }
                 }
             }
         } else {                                    //else is one of the discovery queries
@@ -438,8 +442,6 @@ public class MovieData {
     //
     private void saveFavorites() {
 
-        //Set<String> favorites = new HashSet<String>();      //to store favorite MovieIDs and store into prefs
-
         // as the list of movies may change depending on search and we don't want to overwrite favorites
         // that are defined for movies not in the list, first read the current favorites list and add those
         // movies which are not contained within
@@ -454,7 +456,15 @@ public class MovieData {
             // get the movieID
             String movieID = mMovies.get(i).getMovieID();
             //is it not in current favorites list already?
-            if (favorites.contains(movieID) == true) {
+            if (favorites == null) {
+                //first time run. No favorites. So add if necessary
+                favorites = new HashSet<String>();              //to store favorite MovieIDs and store into prefs
+                if (mMovies.get(i).getFavorite() == true) {
+                    //need to add it
+                    favorites.add(movieID);
+                }
+            }
+            else if (favorites.contains(movieID) == true) {
                 // this movie already in favorites list..
                 // so either do nothing (keep it). or remove it.
                 if (mMovies.get(i).getFavorite() == false) {
@@ -491,12 +501,15 @@ public class MovieData {
         //But will assume that Set is ordered/hashed for searching and .contains is efficient.
         //If not, would order the list and do a binary search at minimum.
 
-        // loop through all the movies...
-        for (int i = 0; i < mMovies.size(); i++) {
-            String movieID = mMovies.get(i).getMovieID();
+        //Is there a favorites list? (there may not be yet). Check...
+        if (favorites != null) {
+            // loop through all the movies...
+            for (int i = 0; i < mMovies.size(); i++) {
+                String movieID = mMovies.get(i).getMovieID();
 
-            //is this movieID in our favorites set?
-            mMovies.get(i).setFavorite(favorites.contains(movieID));
+                //is this movieID in our favorites set?
+                mMovies.get(i).setFavorite(favorites.contains(movieID));
+            }
         }
     }
 
@@ -510,7 +523,11 @@ public class MovieData {
         Set<String> favorites = pref.getStringSet(mCtx.getResources().getString(R.string.favorites_list),null);
 
         //and return as a string array
-        return favorites.toArray(new String[favorites.size()]);
+        if (favorites != null) {
+            return favorites.toArray(new String[favorites.size()]);
+        }
+
+        return null;
     }
 
 }

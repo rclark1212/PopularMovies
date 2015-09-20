@@ -29,7 +29,7 @@ import java.util.Locale;
  */
 public class MovieDetailFragment extends Fragment {
     final static String ARG_POSITION = "position";      //used to pass which item selected when we load fragment
-    private int mCurrentPosition = -1;
+    //private int mCurrentPosition = -1;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -39,7 +39,7 @@ public class MovieDetailFragment extends Fragment {
         // the previous selection set by onSaveInstanceState().
         // This is primarily necessary when in the two-pane layout.
         if (savedInstanceState != null) {
-            mCurrentPosition = savedInstanceState.getInt(ARG_POSITION);
+            MainActivity.mLastSelected = savedInstanceState.getInt(ARG_POSITION);
         }
 
         // Inflate the layout for this fragment and return
@@ -59,25 +59,84 @@ public class MovieDetailFragment extends Fragment {
         if (args != null) {
             // Set article based on argument passed in
             updateMovieView(args.getInt(ARG_POSITION));
-        } else if (mCurrentPosition != -1) {
+        } else if (MainActivity.mLastSelected != -1) {
             // Set article based on saved instance state defined during onCreateView
-            updateMovieView(mCurrentPosition);
+            updateMovieView(MainActivity.mLastSelected);
         } else {
-            // This should only be hit by tablet on initial conditions (app launch). Nothign selected.
+            // This should only be hit by tablet on initial conditions (app launch). Nothing selected.
             // A couple options here - we could blank this fragment. But that would look weird.
             // We could put up a screen saying "please select a movie". But kind of redundant.
             // Instead, how about just setting the detail screen to the first movie in the list?
-            updateMovieView(0);
+            // Nope - won't work. Race condition on loading data. Instead, lets pass in an argument
+            // we can use to blank screen of data
+            updateMovieView(-1);
         }
     }
+
+    private void enableMovieViewObject(Boolean bEnable, View object) {
+
+        if (object == null) return;
+
+        if (bEnable == false) {
+            object.setVisibility(View.INVISIBLE);
+        } else {
+            object.setVisibility(View.VISIBLE);
+        }
+
+    }
+
 
     public void updateMovieView(int position) {
 
         //update detail view based on position selection
 
+        //First though, lets see if this is initial launch and we should disable the view? (nothing selected)
+        Boolean bEnableView = true;
+
+        //On slow devices, there can be a race condition between this function and population
+        //of the database. Do a couple of checks here (or could put in a semaphore).
+        //Rather than just return, blank out the view if data not ready
+        //Note that routine returns early with a blanked out view
+        if (MainActivity.mData == null) bEnableView = false;
+        if (position >= MainActivity.mData.length()) bEnableView = false;
+
+        //And, if explicit, blank out view
+        if (position == -1) bEnableView = false;
+
+        //show/hide the view...
+        //Do this by show/hide the controls
+
+        //title
+        TextView text = (TextView) getActivity().findViewById(R.id.detail_movietitle);
+        enableMovieViewObject(bEnableView, text);
+        //synopsis
+        text = (TextView) getActivity().findViewById(R.id.text_detail_description);
+        enableMovieViewObject(bEnableView, text);
+        //Then release date
+        text = (TextView) getActivity().findViewById(R.id.text_detail_releasedate);
+        enableMovieViewObject(bEnableView, text);
+        //Then release year in bigger font (just first 4 chars)
+        text = (TextView) getActivity().findViewById(R.id.text_detail_year);
+        enableMovieViewObject(bEnableView, text);
+        //Then user rating... (and append "user rating" to it
+        text = (TextView) getActivity().findViewById(R.id.text_detail_rating);
+        enableMovieViewObject(bEnableView, text);
+        //Then image...
+        ImageView imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
+        enableMovieViewObject(bEnableView, imageView);
+        //search button
+        Button search_button = (Button) getView().findViewById(R.id.button_detail_search);
+        enableMovieViewObject(bEnableView, search_button);
+        //finally, set the favorites checkbox state
+        CheckBox checkbox_favs = (CheckBox) getActivity().findViewById(R.id.checkbox_detail_favorite);
+        enableMovieViewObject(bEnableView, checkbox_favs);
+
+        //and just return if we are hiding controls...
+        if (bEnableView == false) return;
+
         //Do title first
         String message = MainActivity.mData.getItem(position).getTitle();
-        TextView text = (TextView) getActivity().findViewById(R.id.detail_movietitle);
+        text = (TextView) getActivity().findViewById(R.id.detail_movietitle);
         if (text != null) {
             text.setText(message.toCharArray(), 0, message.length());
         }
@@ -113,7 +172,7 @@ public class MovieDetailFragment extends Fragment {
         }
 
         //Then image...
-        ImageView imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
+        imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
         if (imageView != null) {
             //Use the clever background jpg loading facility of picasso...
             String posterpath = MainActivity.mData.getItem(position).getPosterPath();
@@ -126,12 +185,12 @@ public class MovieDetailFragment extends Fragment {
         }
 
         //finally, set the favorites checkbox state
-        CheckBox checkbox_favs = (CheckBox) getActivity().findViewById(R.id.checkbox_detail_favorite);
+        checkbox_favs = (CheckBox) getActivity().findViewById(R.id.checkbox_detail_favorite);
         if (checkbox_favs != null) {
             checkbox_favs.setChecked(MainActivity.mData.getItem(position).getFavorite());
         }
 
-        mCurrentPosition = position;
+        MainActivity.mLastSelected = position;
     }
 
     @Override
@@ -139,6 +198,6 @@ public class MovieDetailFragment extends Fragment {
         super.onSaveInstanceState(outState);
 
         // Save the current article selection in case we need to recreate the fragment
-        outState.putInt(ARG_POSITION, mCurrentPosition);
+        outState.putInt(ARG_POSITION, MainActivity.mLastSelected);
     }
 }

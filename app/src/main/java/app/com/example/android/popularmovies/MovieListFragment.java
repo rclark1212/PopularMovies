@@ -18,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -115,6 +116,11 @@ public class MovieListFragment extends Fragment {
         //But first, notify that data no longer valid... (and clear data)
         m_my_array_adapter.notifyDataSetInvalidated();
         MainActivity.mData.clear();
+
+        //throw up a progress bar
+        ProgressBar progress = (ProgressBar) getView().findViewById(R.id.progress_bar);
+        if (progress != null) progress.setVisibility(View.VISIBLE);
+
         //kick off the fetch background thread
         new FetchMoviesTask().execute(ordering);
     }
@@ -145,6 +151,10 @@ public class MovieListFragment extends Fragment {
             if (getFragmentManager().findFragmentById(R.id.movielist_fragment) != null) {
                 mCallback.onMovieSelected(MainActivity.mLastSelected);
             }
+
+            //hide the progress bar
+            ProgressBar progress = (ProgressBar) getView().findViewById(R.id.progress_bar);
+            if (progress != null) progress.setVisibility(View.INVISIBLE);
         }
     }
 }

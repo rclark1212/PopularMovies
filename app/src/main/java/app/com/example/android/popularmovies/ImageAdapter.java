@@ -65,7 +65,7 @@ public class ImageAdapter extends BaseAdapter {
             Picasso.with(mContext).load(posterpath).into(imageView);
         } else {
             //throw up some generic image... Should only be used with testing
-            imageView.setImageResource(R.drawable.android_logo);
+            imageView.setImageResource(R.drawable.cinema_strip_movie_film);
         }
 
         return gridView;

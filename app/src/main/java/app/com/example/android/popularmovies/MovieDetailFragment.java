@@ -180,7 +180,7 @@ public class MovieDetailFragment extends Fragment {
                 Picasso.with(getContext()).load(posterpath).into(imageView);
             } else {
                 //throw up some generic image...
-                imageView.setImageResource(R.drawable.android_logo);
+                imageView.setImageResource(R.drawable.cinema_strip_movie_film);
             }
         }
 

@@ -25,24 +25,19 @@ import android.widget.Toast;
     2) Main activity will show gridview of movies ordered by popularity, rating, date
     or favorites (seems like hiding this on settings screen would be dumb)
     3) Settings screen used to control ordering
-    4) Settings screen also controls how much data (could also do a more button - TBD)
-    5) Clicking on movie brings up data/details of movie. There will also be a "More..."
+    4) Clicking on movie brings up data/details of movie. There will also be a "Search"
         button which will invoke a search intent
         a) Phone - detail screen. Will be full screen normal fragment
         b) Tablet - detail screen will be a popup. Re-use fragment as dialog...
         c) Both UIs will also have a trailers option and a reviews text box. As well as
         ability to mark/store as favorite locally
 
-    Steps:
-    1) xflesh out all primary nav/screens
-    2) xadd primary data elements like grid view with dummy data on phone
-    3) xImplement tablet for above - 2 fragments, 2 activities, dynamically load fragment
-    4) xflesh out additional control elements
-    5) ximplement data population/helper libs
-    6) xadd attribution (need an about menu item)
-    "This product uses the TMDb API but is not endorsed or certified by TMDb."
-    7) xrefactor as necessary
-    8) tweak UI
+    Still TODO - trailers list, trailer launching and reviews
+
+    License Notes:
+    For image, used image from "all-free-download.com". Specific license is:
+    License: Public Domain Dedication (You can copy, modify, distribute and perform the work, even for commercial purposes, all without asking permission.)
+
  */
 
 public class MainActivity extends AppCompatActivity

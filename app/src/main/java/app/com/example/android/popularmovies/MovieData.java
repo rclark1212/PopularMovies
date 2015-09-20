@@ -416,6 +416,10 @@ public class MovieData {
             //create the image file path
             String imgpath = mBaseURL + mImageSizePath + posterPath;
 
+            //If there is no valid poster path, set null for this value as then we will force load
+            //a backup bitmap
+            if (posterPath.equals("null")) imgpath = null;
+
             //and create the new movie item
             MovieItem movie = new MovieItem(movieID, title, imgpath, synopsis, rating, releaseDate, false, 0);
 

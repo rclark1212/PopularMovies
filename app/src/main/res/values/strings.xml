@@ -17,4 +17,6 @@
     <string name="Favorite">Favorite</string>
     <string name="Search">Search</string>
     <string name="user_rating">user rating</string>
+    <string name="trailers">Trailers</string>
+    <string name="reviews">Reviews</string>
 </resources>

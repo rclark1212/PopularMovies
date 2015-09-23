@@ -75,11 +75,6 @@ public class MovieDetailFragment extends Fragment {
             // we can use to blank screen of data
             updateMovieView(-1);
         }
-
-        //and kick off a background thread to load trailers and reviews here
-        if (MainActivity.mLastSelected >= 0) {
-            updateMovieDetails(MainActivity.mLastSelected);
-        }
     }
 
     private void enableMovieViewObject(Boolean bEnable, View object) {
@@ -136,6 +131,10 @@ public class MovieDetailFragment extends Fragment {
         //Then trailers
         text = (TextView) getActivity().findViewById(R.id.detail_trailers);
         enableMovieViewObject(bEnableView, text);
+        //Then line
+        View vw = (View) getActivity().findViewById(R.id.detail_horizontal_line);
+        enableMovieViewObject(bEnableView, vw);
+
         //Then image...
         ImageView imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
         enableMovieViewObject(bEnableView, imageView);
@@ -206,6 +205,12 @@ public class MovieDetailFragment extends Fragment {
         }
 
         MainActivity.mLastSelected = position;
+
+        //and kick off a background thread to load trailers and reviews here
+        if (MainActivity.mLastSelected >= 0) {
+            updateMovieDetails(position);
+        }
+
     }
 
     @Override

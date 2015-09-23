@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity
     public static ArrayList<String> mTrailers;                  //The globally used trailers list (populated at movie selection)
     public static ArrayList<String> mReviews;                   //The globally used reviews list (populated at movie selection)
     public static int mLastSelected = -1;                       //last selected movie
+
     public final static int START_ID_TRAILERS = 110;            //Start ID for trailers textviews
     public final static int START_ID_REVIEWS = 310;             //Start ID for reviews textviews
     public final static int TEXT_MARGIN = 6;                    //Margin to use on trailer/review list
@@ -132,6 +133,7 @@ public class MainActivity extends AppCompatActivity
         //rather than do square roots, lets just set a threshold for going to 2 pane. Lets set 5.5" in one dimension as a threshold
         if ((width > TWO_PANE_SIZE_THRESHOLD) || (height > TWO_PANE_SIZE_THRESHOLD)) {
             //2 pane design!
+
             //now figure out rotation...
             //maybe a better way to do this but I am doing it with 2 layouts
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
@@ -139,6 +141,7 @@ public class MainActivity extends AppCompatActivity
             } else {
                 setContentView(R.layout.activity_main_landscape);
             }
+
         } else {
             setContentView(R.layout.activity_main);
         }

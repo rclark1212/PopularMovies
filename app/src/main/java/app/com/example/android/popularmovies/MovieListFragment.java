@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -44,6 +45,14 @@ public class MovieListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View retView = inflater.inflate(R.layout.fragment_movies, container, false);
+
+        //and the aesthetics of 2pane design looks better if you differentiate the backgrounds.
+        //set light gray for the list view.
+        //In the two pane version, lets set a different color for movielist
+        //first, are we in 2pane view? (does the movielist fragment exist?
+        if (getFragmentManager().findFragmentById(R.id.movielist_fragment) != null) {
+            retView.setBackgroundColor(Color.LTGRAY);
+        }
 
         //find the grid control
         m_grid = (GridView) retView.findViewById(R.id.gridview_movies);

@@ -125,23 +125,23 @@ public class MovieListFragment extends Fragment {
         new FetchMoviesTask().execute(ordering);
     }
 
-    private class FetchMoviesTask extends AsyncTask<String, Void, String> {
+    private class FetchMoviesTask extends AsyncTask<String, Void, Long> {
         private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
 
         //background work...
-        protected String doInBackground(String... ordering) {
+        protected Long doInBackground(String... ordering) {
 
             if (ordering == null) {
-                return "";
+                return 0L;
             }
 
             // And fetch the data...
             MainActivity.mData.loadTMDBFromNetwork(ordering[0], getResources().getString(R.string.TMDB_API_KEY));
-            return "";
+            return 0L;
         }
 
         //And now to repopulate list with real data
-        protected void onPostExecute(String dummy) {
+        protected void onPostExecute(Long result) {
             //update the global adapter
             m_my_array_adapter.notifyDataSetChanged();
             m_grid.invalidateViews();   //hmm - I would expect line above to do this. But it does not :(

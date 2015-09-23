@@ -1,7 +1,10 @@
 package app.com.example.android.popularmovies;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +13,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -71,6 +75,11 @@ public class MovieDetailFragment extends Fragment {
             // we can use to blank screen of data
             updateMovieView(-1);
         }
+
+        //and kick off a background thread to load trailers and reviews here
+        if (MainActivity.mLastSelected >= 0) {
+            updateMovieDetails(MainActivity.mLastSelected);
+        }
     }
 
     private void enableMovieViewObject(Boolean bEnable, View object) {
@@ -120,6 +129,12 @@ public class MovieDetailFragment extends Fragment {
         enableMovieViewObject(bEnableView, text);
         //Then user rating... (and append "user rating" to it
         text = (TextView) getActivity().findViewById(R.id.text_detail_rating);
+        enableMovieViewObject(bEnableView, text);
+        //Then reviews
+        text = (TextView) getActivity().findViewById(R.id.detail_reviews);
+        enableMovieViewObject(bEnableView, text);
+        //Then trailers
+        text = (TextView) getActivity().findViewById(R.id.detail_trailers);
         enableMovieViewObject(bEnableView, text);
         //Then image...
         ImageView imageView = (ImageView) getActivity().findViewById(R.id.detail_image);
@@ -199,5 +214,64 @@ public class MovieDetailFragment extends Fragment {
 
         // Save the current article selection in case we need to recreate the fragment
         outState.putInt(ARG_POSITION, MainActivity.mLastSelected);
+    }
+
+    //update the detailed movie data here...
+    //routine will load trailers/reviews into two global arrays (mReviews, mTrailers)
+    // 1) clear the array data
+    // 2) spawn a seperate thread which then loads the data
+    //
+    // Note one issue (and something to possibly fix in future). We are asynchronously loading
+    // the movie data. If a user quickly clicks to expand trailer/review views (or loading takes
+    // a really long time), list might not be fully populated when expanded. Could fix with a simple
+    // global semiphone and some waits... (but this defeats purpose of UI not being blocked).
+    //
+    private void updateMovieDetails(int selected) {
+
+        //get real data...
+        //But first, clear the data
+        MainActivity.mReviews.clear();
+        MainActivity.mTrailers.clear();
+
+        //Don't bother with a progress bar since this should be such a short load
+        //will be hidden by user navigating UI.
+
+        //kick off the fetch background thread
+        Long position = new Long(selected);
+        new FetchMovieDetailTask().execute(position);
+    }
+
+    private class FetchMovieDetailTask extends AsyncTask<Long, Void, Long> {
+        private final String LOG_TAG = FetchMovieDetailTask.class.getSimpleName();
+
+        //background work...
+        protected Long doInBackground(Long... selected) {
+
+            // And fetch the data...
+            //MainActivity.mData.loadTMDBFromNetwork(ordering[0], getResources().getString(R.string.TMDB_API_KEY));
+            for (int i = 0; i < 10; i++) {
+                MainActivity.mTrailers.add("hack trailer number " + i + " for movie " + selected[0]);
+            }
+
+            for (int i = 0; i < 10; i++) {
+                String dummystr = "--- test to extend length of string to be multiline. blah blah fdsafd 32 fedfs 231321 dsafd sfdsf vcx qwqe fdsdfs rewerw and that is all folks";
+                if ((i%2) != 0)
+                    dummystr = "--- odd. For movie " + selected[0];
+
+                MainActivity.mReviews.add("hack review number " + i + dummystr);
+            }
+
+            return 0L;
+        }
+
+        //And now back on UI thread...
+        protected void onPostExecute(Long result) {
+
+            //Really since we had no progress indicator to hide...
+            //And there is no adapter to update...
+            //Really there is nothing to do.
+
+            //If there were a semaphone, set it here.
+        }
     }
 }

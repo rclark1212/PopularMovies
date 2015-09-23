@@ -1,15 +1,22 @@
 package app.com.example.android.popularmovies;
 
 import android.app.SearchManager;
+import android.content.DialogInterface;
 import android.content.res.Configuration;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,7 +24,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
@@ -26,6 +32,9 @@ import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 /*  OK - summary of project
@@ -65,22 +74,45 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity
     implements MovieListFragment.OnMovieSelectedListener {
 
-    public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;   //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
     public static MovieData mData;                              //this object will be used by other clases... make it public
-                                                                //this is the primary database of movies data
+                                                                //this is the primary database of movies
+    public static ArrayList<String> mTrailers;                  //The globally used trailers list (populated at movie selection)
+    public static ArrayList<String> mReviews;                   //The globally used reviews list (populated at movie selection)
     public static int mLastSelected = -1;                       //last selected movie
     public final static int START_ID_TRAILERS = 110;            //Start ID for trailers textviews
     public final static int START_ID_REVIEWS = 310;             //Start ID for reviews textviews
+    public final static int TEXT_MARGIN = 6;                    //Margin to use on trailer/review list
+    public final static int START_BUTTON_TEXT_MARGIN = 20;      //Margin to give on start button for trailer list
+    public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;   //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //
+        // First, do we have internet?
+        //
+        if (isOnline() == false) {
+            new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.alert_internet))
+                    .setCancelable(false)
+                    .setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // exit
+                            finish();
+                        }
+                    }).create().show();
+        }
 
         //load the data if it does not exist...
         //first create the data if it does not already exist...
         if (mData == null)
         {
             mData = new MovieData(this);
+            //And create the trailers/reviews
+            mTrailers = new ArrayList<String>();
+            mReviews = new ArrayList<String>();
         }
 
         //Lets swap the orientation if appropriate here...
@@ -208,7 +240,6 @@ public class MainActivity extends AppCompatActivity
     //handle the favorites checkbox here
     //
     public void onCheckboxClicked(View view) {
-        //TODO
         CheckBox favorites_check = (CheckBox) view.findViewById(R.id.checkbox_detail_favorite);
         if (favorites_check != null)
         {
@@ -237,6 +268,19 @@ public class MainActivity extends AppCompatActivity
     }
 
     //
+    //  Add utility routine to check if we have internet connection. Check on start
+    //
+    public boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+        if (netInfo == null)
+            return false;
+
+        return netInfo.isConnected();
+    }
+
     //  Handle the clicking of the Trailers text
     //  To be specific, we will "expand" or "contract" the list of trailers by creating (destroying)
     //  textviews programatically. We will also shift the relative layout reviews field down under
@@ -244,49 +288,36 @@ public class MainActivity extends AppCompatActivity
     //  a scrollable control inside a scrollable control sucks for UI.
     //
     public void onTrailersClick(View v) {
-        //ok - lets hack this up for a moment
-        //but use the toggle function
-
-        ArrayList<String> data = new ArrayList<String>();
-
-        //TODO - fix
-        for (int i = 0; i < 10; i++) {
-            data.add("hack trailer number " + i);
-        }
+        //use the toggle function
 
         //and toggle list open/closed
-        ToggleList(v,R.id.detail_trailers,R.id.detail_reviews,START_ID_REVIEWS, data);
+        //R.drawable.play
+        ToggleList(v,R.id.detail_trailers,R.id.detail_reviews,START_ID_TRAILERS, R.drawable.play, true, mTrailers);
     }
 
     //
     //  Handle the clicking of the Reviews text
     //
     public void onReviewsClick(View v) {
-        //ok - lets hack this up for a moment
-        //but use the toggle function
-
-        ArrayList<String> data = new ArrayList<String>();
-
-        //TODO - fix
-        for (int i = 0; i < 10; i++) {
-            data.add("hack review number " + i);
-        }
+        //use the toggle function
 
         //and toggle list open/closed
-        ToggleList(v,R.id.detail_reviews,0,START_ID_TRAILERS, data);
+        ToggleList(v,R.id.detail_reviews,0,START_ID_REVIEWS, 0, false, mReviews);
 
     }
 
     //
     //  Utility function to expand or contract a reviews or trailers list.
     //  Takes in the source view (one of the two textviews)
-    //  Also takes in a belowID (expand below this) and an aboveID (expand above this ID)
+    //  Also takes in a insertListBelowThisID (expand below this) and an insertListAboveThisID (expand above this ID)
     //  Takes in a startID (use this ID to start for created views)
+    //  Takes in a drawable which is prepended to text (if it is not 0)
+    //  And a flag to keep text single line (ellipsize) or not.
     //  And data - this contains the text to show - note it must be valid even when removing views
     //  This routine is *not* generic and is meant to be used for the very specific purpose
     //  of only the trailers/review layout.
     //
-    private void ToggleList(View v, int belowID, int aboveID, int startID, ArrayList<String> data) {
+    private void ToggleList(View v, int insertListBelowThisID, int insertListAboveThisID, int startID, int drawableID, Boolean bSingleLine, ArrayList<String> data) {
 
         //Get the detail fragment view (one up from view passed in)...
         ViewParent parent = v.getParent();
@@ -301,12 +332,12 @@ public class MainActivity extends AppCompatActivity
             }
 
             //does a view below exist?
-            if (aboveID != 0) {
+            if (insertListAboveThisID != 0) {
                 //now shift up the view below...
                 //find the bottow reference view first
-                TextView viewbottom = (TextView) detailLayout.findViewById(aboveID);   //find the view to move (the bottom one)
+                TextView viewbottom = (TextView) detailLayout.findViewById(insertListAboveThisID);   //find the view to move (the bottom one)
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) viewbottom.getLayoutParams();   //get its params
-                params.addRule(RelativeLayout.BELOW, belowID);                      //reset params to follow the view above
+                params.addRule(RelativeLayout.BELOW, insertListBelowThisID);                      //reset params to follow the view above
                 viewbottom.setLayoutParams(params);                                 //and set it
             }
             //all done removing a view
@@ -319,15 +350,24 @@ public class MainActivity extends AppCompatActivity
                 newtext.setClickable(true);                 //make it clickable (reviews we will ignore click)
                 //and listen for a click
                 newtext.setOnClickListener(trailers_listener);  //and put on a listener
+                if (drawableID != 0) {
+                    newtext.setCompoundDrawablesWithIntrinsicBounds(drawableID, 0, 0, 0);
+                }
 
                 //create a layout params file for this new textview
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-                params.setMargins(5, 5, 5, 5);     //set margins. TODO - remove hardcode
-                params.setMarginStart(20);      //extra start. TODO - remove hardcode
+                params.setMargins(TEXT_MARGIN, TEXT_MARGIN, TEXT_MARGIN, TEXT_MARGIN);  //set margins.
+                params.setMarginStart(START_BUTTON_TEXT_MARGIN);                        //extra start.
+                newtext.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14F);                   //set the size
 
-                //if this is the first of the new views, set it to be below the top view (belowID)
+                //is this single line?
+                if (bSingleLine == true) {
+                    newtext.setEllipsize(TextUtils.TruncateAt.END);
+                }
+
+                //if this is the first of the new views, set it to be below the top view (insertListBelowThisID)
                 if (i == 0) {
-                    params.addRule(RelativeLayout.BELOW, belowID);
+                    params.addRule(RelativeLayout.BELOW, insertListBelowThisID);
                 } else {
                     //set the view to follow the last one
                     params.addRule(RelativeLayout.BELOW, startID + i - 1);
@@ -338,9 +378,9 @@ public class MainActivity extends AppCompatActivity
 
                 //fix up reviews
                 //is there a view below which needs to be shifted?
-                if (aboveID != 0) {
+                if (insertListAboveThisID != 0) {
                     //get the view
-                    TextView viewbottom = (TextView) detailLayout.findViewById(aboveID);
+                    TextView viewbottom = (TextView) detailLayout.findViewById(insertListAboveThisID);
                     RelativeLayout.LayoutParams bottomparams = (RelativeLayout.LayoutParams) viewbottom.getLayoutParams();
                     //set it to be below the last of the expanded list
                     bottomparams.addRule(RelativeLayout.BELOW, startID + 10 - 1);
@@ -359,7 +399,16 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onClick(View v) {
             //hmm - do something
-            Toast.makeText(getApplication(),"yay! you clicked!",Toast.LENGTH_SHORT).show();
+            int clickID = v.getId();
+            int clickPostion = 0;
+
+            if (clickID >= START_ID_REVIEWS) {
+                clickPostion = clickID - START_ID_REVIEWS;
+                Toast.makeText(getApplication(),"yay! you clicked item " + clickPostion + " for reviews",Toast.LENGTH_SHORT).show();
+            } else {
+                clickPostion = clickID - START_ID_TRAILERS;
+                Toast.makeText(getApplication(),"yay! you clicked item " + clickPostion + " for trailers",Toast.LENGTH_SHORT).show();
+            }
         }
     };
 

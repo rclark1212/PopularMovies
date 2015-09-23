@@ -40,7 +40,9 @@ public class MovieData {
 
     private final String LOG_TAG = MovieData.class.getSimpleName();
 
-    private ArrayList<MovieItem> mMovies;   //The main database
+    private ArrayList<MovieItem> mMovies;   //The main database. Note that there are 2 other global string arrays used
+                                            //which are defined in MainActivity to store the trailer/review lists
+                                            //This class provides utility functions to load these from TMDB
     private String mBaseURL;                //Base URL for images. Per TMDB API docs, this generally only needs to be checked once...
                                             //sure it might change if you left app open for months but deal with this on a production app. (would refresh if I hit error loading bitmap)
     private String mImageSizePath;          //to be used with mBaseURL (size of poster to load)

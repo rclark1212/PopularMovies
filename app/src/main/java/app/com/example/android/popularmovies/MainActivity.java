@@ -1,10 +1,12 @@
 package app.com.example.android.popularmovies;
 
 import android.app.SearchManager;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
@@ -76,8 +78,6 @@ public class MainActivity extends AppCompatActivity
 
     public static MovieData mData;                              //this object will be used by other clases... make it public
                                                                 //this is the primary database of movies
-    public static ArrayList<String> mTrailers;                  //The globally used trailers list (populated at movie selection)
-    public static ArrayList<String> mReviews;                   //The globally used reviews list (populated at movie selection)
     public static int mLastSelected = -1;                       //last selected movie
 
     public final static int START_ID_TRAILERS = 110;            //Start ID for trailers textviews
@@ -111,9 +111,6 @@ public class MainActivity extends AppCompatActivity
         if (mData == null)
         {
             mData = new MovieData(this);
-            //And create the trailers/reviews
-            mTrailers = new ArrayList<String>();
-            mReviews = new ArrayList<String>();
         }
 
         //Lets swap the orientation if appropriate here...
@@ -294,8 +291,13 @@ public class MainActivity extends AppCompatActivity
         //use the toggle function
 
         //and toggle list open/closed
-        //R.drawable.play
-        ToggleList(v,R.id.detail_trailers,R.id.detail_reviews,START_ID_TRAILERS, R.drawable.play, true, mTrailers);
+        //however note that we need to create an arraylist param to send in (trailers are in a structure)
+        ArrayList<String> params = new ArrayList<String>();
+
+        for (int i = 0; i < mData.mTrailers.size(); i++) {
+            params.add(mData.mTrailers.get(i).name);
+        }
+        ToggleList(v,R.id.detail_trailers,R.id.detail_reviews,START_ID_TRAILERS, R.drawable.play, true, params);
     }
 
     //
@@ -305,7 +307,7 @@ public class MainActivity extends AppCompatActivity
         //use the toggle function
 
         //and toggle list open/closed
-        ToggleList(v,R.id.detail_reviews,0,START_ID_REVIEWS, 0, false, mReviews);
+        ToggleList(v,R.id.detail_reviews,0,START_ID_REVIEWS, 0, false, mData.mReviews);
 
     }
 
@@ -314,7 +316,8 @@ public class MainActivity extends AppCompatActivity
     //  Takes in the source view (one of the two textviews)
     //  Also takes in a insertListBelowThisID (expand below this) and an insertListAboveThisID (expand above this ID)
     //  Takes in a startID (use this ID to start for created views)
-    //  Takes in a drawable which is prepended to text (if it is not 0)
+    //  Takes in a drawable which is prepended to text (if it is not 0). Also note a non-zero drawable
+    //     indicates a play function and thus is clickable. Thus we will set this text blue (to indicate it is clickable)
     //  And a flag to keep text single line (ellipsize) or not.
     //  And data - this contains the text to show - note it must be valid even when removing views
     //  This routine is *not* generic and is meant to be used for the very specific purpose
@@ -355,6 +358,8 @@ public class MainActivity extends AppCompatActivity
                 newtext.setOnClickListener(trailers_listener);  //and put on a listener
                 if (drawableID != 0) {
                     newtext.setCompoundDrawablesWithIntrinsicBounds(drawableID, 0, 0, 0);
+                    //and set color blue
+                    newtext.setTextColor(Color.BLUE);
                 }
 
                 //create a layout params file for this new textview
@@ -386,7 +391,7 @@ public class MainActivity extends AppCompatActivity
                     TextView viewbottom = (TextView) detailLayout.findViewById(insertListAboveThisID);
                     RelativeLayout.LayoutParams bottomparams = (RelativeLayout.LayoutParams) viewbottom.getLayoutParams();
                     //set it to be below the last of the expanded list
-                    bottomparams.addRule(RelativeLayout.BELOW, startID + 10 - 1);
+                    bottomparams.addRule(RelativeLayout.BELOW, startID + data.size() - 1);
                     //and update the params
                     viewbottom.setLayoutParams(bottomparams);
                 }
@@ -394,6 +399,20 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    //
+    // Utility routine to start youtube intent. Comes from
+    // http://stackoverflow.com/questions/574195/android-youtube-app-play-video-intent
+    //
+    public void watchYoutubeVideo(String id){
+        try{
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
+            startActivity(intent);
+        }catch (ActivityNotFoundException ex){
+            Intent intent=new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://www.youtube.com/watch?v="+id));
+            startActivity(intent);
+        }
+    }
 
     //
     //  Handle the clicking of the Reviews text
@@ -406,11 +425,14 @@ public class MainActivity extends AppCompatActivity
             int clickPostion = 0;
 
             if (clickID >= START_ID_REVIEWS) {
-                clickPostion = clickID - START_ID_REVIEWS;
-                Toast.makeText(getApplication(),"yay! you clicked item " + clickPostion + " for reviews",Toast.LENGTH_SHORT).show();
+                //Do nothing. Reviews don't do anything on click
+                //clickPostion = clickID - START_ID_REVIEWS;
+                //Toast.makeText(getApplication(),"yay! you clicked item " + clickPostion + " for reviews",Toast.LENGTH_SHORT).show();
             } else {
                 clickPostion = clickID - START_ID_TRAILERS;
-                Toast.makeText(getApplication(),"yay! you clicked item " + clickPostion + " for trailers",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplication(),"yay! you clicked item " + clickPostion + " for trailers",Toast.LENGTH_SHORT).show();
+                //Start a youtube intent
+                watchYoutubeVideo(mData.mTrailers.get(clickPostion).key);
             }
         }
     };

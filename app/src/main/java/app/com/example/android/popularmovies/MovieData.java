@@ -37,12 +37,16 @@ public class MovieData {
     private static final String TMDB_SORTBY_POPULARITY = "popularity.desc";
     private static final String TMDB_SORTBY_RATING = "vote_average.desc";
     private static final String TMDB_CONFIGURATION = "configuration";
+    private static final String TMDB_VIDEOS = "videos";
+    private static final String TMDB_REVIEWS = "reviews";
 
     private final String LOG_TAG = MovieData.class.getSimpleName();
 
     private ArrayList<MovieItem> mMovies;   //The main database. Note that there are 2 other global string arrays used
                                             //which are defined in MainActivity to store the trailer/review lists
                                             //This class provides utility functions to load these from TMDB
+    public static ArrayList<Trailer> mTrailers;     //The globally used trailers list (populated at movie selection). Note only one movie is loaded at a time
+    public static ArrayList<String> mReviews;      //The globally used reviews list (populated at movie selection). Note only one movie is loaded at a time
     private String mBaseURL;                //Base URL for images. Per TMDB API docs, this generally only needs to be checked once...
                                             //sure it might change if you left app open for months but deal with this on a production app. (would refresh if I hit error loading bitmap)
     private String mImageSizePath;          //to be used with mBaseURL (size of poster to load)
@@ -51,8 +55,11 @@ public class MovieData {
     public MovieData(Context ctx) {
         //just init the list here...
         //note this is the main database of movies we load
-        mMovies = new ArrayList<MovieItem>();
-        mBaseURL = null;
+        mMovies = new ArrayList<MovieItem>();   //holds the list of movies
+        mReviews = new ArrayList<String>();     //holds a list of reviews for ONE movie
+        mTrailers = new ArrayList<Trailer>();    //holds a list of trailers for ONE movie
+
+        mBaseURL = null;                        //holds the base URL for image fetch
         mCtx = ctx;
     }
 
@@ -316,6 +323,144 @@ public class MovieData {
     }
 
     /*
+    //  And load trailers, reviews from TMDB here
+    //  index is the index to the mData array of movies (get movieID from here)
+    //  loads the global arraylists within the object with movie/trailer info
+    //  apikey is the TMDB api key
+    */
+    public void loadTMDBReviewsTrailers(int index, String apikey) {
+
+        //coming into this routine the mReviews, mTrailers arrays should be cleared already.
+
+        //first, is the range within bounds?
+        if ((index <0) || (index >= mMovies.size())) {
+            return;
+        }
+
+        // Will contain the raw JSON responses as a string.
+        String[] returnJsonStr = {null, null};
+        String[] queryParams = {TMDB_VIDEOS, TMDB_REVIEWS};
+
+        // Construct the URLs for the TMDB query
+        // Possible parameters are avaiable at TMDB API page, at
+        // http://http://docs.themoviedb.apiary.io/#reference
+        // grab both sets of json data (2 params in queryparams)
+        for (int i = 0; i < queryParams.length; i++) {
+
+            Uri.Builder builder = new Uri.Builder();
+
+            builder.scheme("http")
+                    .authority(TMDB_API_BASE)
+                    .appendPath(TMDB_VERSION)
+                    .appendPath(TMDB_MOVIES)
+                    .appendPath(mMovies.get(index).getMovieID())        //populate movieID from passed in index
+                    .appendPath(queryParams[i])                         //and which query? (videos or reviews)
+                    .appendQueryParameter(TMDB_API_KEY, apikey);
+
+            String urlbuild = builder.build().toString();
+            Log.v(LOG_TAG, "Built review extra" + i + " string: " + urlbuild);
+            returnJsonStr[i] = getTMDBDataFromURL(urlbuild);              //get the reviews data
+        }
+
+        try {
+            //now parse the movie json data captured earlier
+            //note that due to ordering of populating queryParams above, trailers is first param, reviews 2nd.
+            //also note that you will get a json parse error if these are swapped.
+            getTMDBExtraInfoFromJson(returnJsonStr[0], returnJsonStr[1]);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "JSON Error parsing review/trailer data ", e);
+
+            return;
+        }
+    }
+
+
+    /*
+    //  A note on JSON parsing...
+    //  We could refactor the JSON parsing to have one utility routine which was passed an array
+    //  of parse terms and then returned an array of values. But frankly it would not save any
+    //  typing. Nor would it make code more readable. Overall since the parse command is a simple
+    //  function call, keeping the JSON parse routines separate is preferred.
+     */
+
+    //
+    //  Parses review and trailer info
+    //
+    private void getTMDBExtraInfoFromJson(String trailersJsonStr, String reviewsJsonStr)
+            throws JSONException {
+        //check for nulls on the strings here. Since we are parsing two sets of data, we will call
+        //this function even if one is null.
+        final String TMDB_LIST = "results";
+
+        final String TMDB_AUTHOR = "author";
+        final String TMDB_REVIEW = "content";
+
+        final String TMDB_VIDSITE = "site";         //must be "YouTube" for us to load
+        final String TMDB_VIDTYPE = "type";         //maybe must be of type "Trailer" for us to load
+        final String TMDB_VIDNAME = "name";
+        final String TMDB_VIDKEY = "key";
+
+        if (trailersJsonStr != null) {
+            //Parse trailers
+            JSONObject trailersJSON = new JSONObject(trailersJsonStr);
+            JSONArray trailersArray = trailersJSON.getJSONArray(TMDB_LIST);
+            ;
+
+            //and now start reading in the data...
+            if (trailersArray != null) {
+
+                for (int i = 0; i < trailersArray.length(); i++) {
+
+                    // Get the JSON object representing the trailers
+                    JSONObject jTrailer = trailersArray.getJSONObject(i);
+
+                    //extract what we need
+                    String site = jTrailer.getString(TMDB_VIDSITE);
+                    String type = jTrailer.getString(TMDB_VIDTYPE);
+                    String name = jTrailer.getString(TMDB_VIDNAME);
+                    String key = jTrailer.getString(TMDB_VIDKEY);
+
+                    //and add to our array
+                    //but check to make sure it matches our criteria
+                    //take out trailer condition. There are "featurettes" which we want to show as well
+                    if (site.equals("YouTube") /*&& (type.equals("Trailer"))*/) {
+                        //add it
+                        Trailer newtrailer = new Trailer();
+                        newtrailer.name = name;
+                        newtrailer.key = key;
+                        mTrailers.add(newtrailer);
+                    }
+                }
+            }
+        }
+
+        //Parse reviews
+        if (reviewsJsonStr != null) {
+            JSONObject reviewsJSON = new JSONObject(reviewsJsonStr);
+            JSONArray reviewsArray = reviewsJSON.getJSONArray(TMDB_LIST);
+            ;
+
+            //and now start reading in the data...
+            if (reviewsArray != null) {
+
+                for (int i = 0; i < reviewsArray.length(); i++) {
+
+                    // Get the JSON object representing the trailers
+                    JSONObject jReview = reviewsArray.getJSONObject(i);
+
+                    //extract what we need
+                    String author = jReview.getString(TMDB_AUTHOR);
+                    String review = jReview.getString(TMDB_REVIEW);
+
+                    //and add to our array
+                    mReviews.add(author + "\n" + review);   //format of author name with a newline to review
+                }
+            }
+        }
+    }
+
+
+    /*
     //  Parse config information from TMDB call here
     //  Pass in JSON string blob
     //  Use to set the globals for base_url and the default poster load size
@@ -348,7 +493,7 @@ public class MovieData {
             //get next biggest...
             mImageSizePath = (String) cfgArray.get(cfgArray.length()-1);
         } else {
-            mImageSizePath = null;  //boo - didn't get array for some reason...
+            mImageSizePath = null;  //boo - didn't get array for some reason... Note, will use a setting of null to put in a default image
         }
 
         //all done... Log the data
@@ -420,7 +565,9 @@ public class MovieData {
 
             //If there is no valid poster path, set null for this value as then we will force load
             //a backup bitmap
-            if (posterPath.equals("null")) imgpath = null;
+            if (posterPath.equals("null") || (mBaseURL == null)) {
+                imgpath = null;
+            }
 
             //and create the new movie item
             MovieItem movie = new MovieItem(movieID, title, imgpath, synopsis, rating, releaseDate, false, 0);
@@ -429,8 +576,6 @@ public class MovieData {
             mMovies.add(movie);
 
         }
-
-        return;
     }
 
     //
@@ -439,8 +584,6 @@ public class MovieData {
     // Now TMDB has a favorites function but you have to log in to use it. Allow favorites
     // without requiring signing up for an account.
     // Save off the favorites list on a .clear. Load favorites list on an update.
-    //
-
     //
     // Save favorites:
     // Scan through main array and save off all the movieIDs which are marked as favorite

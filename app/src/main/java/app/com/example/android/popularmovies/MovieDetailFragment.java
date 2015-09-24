@@ -2,6 +2,7 @@ package app.com.example.android.popularmovies;
 
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -235,8 +236,8 @@ public class MovieDetailFragment extends Fragment {
 
         //get real data...
         //But first, clear the data
-        MainActivity.mReviews.clear();
-        MainActivity.mTrailers.clear();
+        MainActivity.mData.mReviews.clear();
+        MainActivity.mData.mTrailers.clear();
 
         //Don't bother with a progress bar since this should be such a short load
         //will be hidden by user navigating UI.
@@ -253,28 +254,37 @@ public class MovieDetailFragment extends Fragment {
         protected Long doInBackground(Long... selected) {
 
             // And fetch the data...
-            //MainActivity.mData.loadTMDBFromNetwork(ordering[0], getResources().getString(R.string.TMDB_API_KEY));
-            for (int i = 0; i < 10; i++) {
-                MainActivity.mTrailers.add("hack trailer number " + i + " for movie " + selected[0]);
-            }
-
-            for (int i = 0; i < 10; i++) {
-                String dummystr = "--- test to extend length of string to be multiline. blah blah fdsafd 32 fedfs 231321 dsafd sfdsf vcx qwqe fdsdfs rewerw and that is all folks";
-                if ((i%2) != 0)
-                    dummystr = "--- odd. For movie " + selected[0];
-
-                MainActivity.mReviews.add("hack review number " + i + dummystr);
-            }
+            MainActivity.mData.loadTMDBReviewsTrailers(selected[0].intValue(), getResources().getString(R.string.TMDB_API_KEY));
 
             return 0L;
         }
 
         //And now back on UI thread...
         protected void onPostExecute(Long result) {
+            //If there was trailer or review data loaded...
+            //Mark the review/trailer text as being blue
+            TextView tReviews = (TextView) getView().findViewById(R.id.detail_reviews);
+            TextView tTrailers = (TextView) getView().findViewById(R.id.detail_trailers);
 
-            //Really since we had no progress indicator to hide...
-            //And there is no adapter to update...
-            //Really there is nothing to do.
+            if (tReviews != null) {
+                if (MainActivity.mData.mReviews.size() > 0) {
+                    //mark reviews text as blue
+                    tReviews.setTextColor(Color.BLUE);
+                } else {
+                    //mark reviews text as black
+                    tReviews.setTextColor(Color.BLACK);
+                }
+            }
+
+            if (tTrailers != null) {
+                if (MainActivity.mData.mTrailers.size() > 0) {
+                    //mark reviews text as blue
+                    tTrailers.setTextColor(Color.BLUE);
+                } else {
+                    //mark reviews text as black
+                    tTrailers.setTextColor(Color.BLACK);
+                }
+            }
 
             //If there were a semaphone, set it here.
         }

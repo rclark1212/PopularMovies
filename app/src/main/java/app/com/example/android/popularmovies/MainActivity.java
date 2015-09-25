@@ -15,6 +15,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -214,6 +215,11 @@ public class MainActivity extends AppCompatActivity
         // does the detail view exist?
         if (movieDetail != null) {
             //okay - in the tablet 2 fragment layout.
+            //first, close any expanded lists
+            RelativeLayout layout = (RelativeLayout) movieDetail.getView().findViewById(R.id.detail_fragment);
+            CloseList(layout, START_ID_TRAILERS, mData.mTrailers.size());
+            CloseList(layout, START_ID_REVIEWS, mData.mReviews.size());
+
             //update the view...
             movieDetail.updateMovieView(position);
         } else {
@@ -312,6 +318,32 @@ public class MainActivity extends AppCompatActivity
     }
 
     //
+    // And one more utility function to close the lists if they are expanded
+    // (for tablet case where detail view is not being destroyed/recreated)
+    //  pass in the layout, startID and length.
+    //
+    private void CloseList(RelativeLayout layout, int startID, int listLength) {
+
+        // is there valid data?
+        if (listLength == 0) return;
+
+        //does the start ID exist already?
+        if (layout.findViewById(startID) != null) {
+            //close it on up
+            for (int i = 0; i < listLength; i++) {
+                layout.removeView(layout.findViewById(startID + i));
+            }
+
+            //and now fix up the reviews/trailers layouts (put reviews right after trailers)
+            TextView reviewsView = (TextView) layout.findViewById(R.id.detail_reviews);
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) reviewsView.getLayoutParams();
+            params.addRule(RelativeLayout.BELOW, R.id.detail_trailers);
+            reviewsView.setLayoutParams(params);
+        }
+    }
+
+
+    //
     //  Utility function to expand or contract a reviews or trailers list.
     //  Takes in the source view (one of the two textviews)
     //  Also takes in a insertListBelowThisID (expand below this) and an insertListAboveThisID (expand above this ID)
@@ -351,7 +383,7 @@ public class MainActivity extends AppCompatActivity
             //expand all the views
             for (int i = 0; i < data.size(); i++) {
                 TextView newtext = new TextView(this);      //create the textview
-                newtext.setText(data.get(i));               //set the text from data array
+                newtext.setText(Html.fromHtml(data.get(i)));//set the text from data array - process html tags
                 newtext.setId(startID + i);                 //set the ID (so we can process clicks and destroy it)
                 newtext.setClickable(true);                 //make it clickable (reviews we will ignore click)
                 //and listen for a click

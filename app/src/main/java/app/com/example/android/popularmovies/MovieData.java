@@ -452,8 +452,8 @@ public class MovieData {
                     String author = jReview.getString(TMDB_AUTHOR);
                     String review = jReview.getString(TMDB_REVIEW);
 
-                    //and add to our array
-                    mReviews.add(author + "\n" + review);   //format of author name with a newline to review
+                    //and add to our array (use html tags for review)
+                    mReviews.add("<b>" + author + "</b>: " + review);   //format of author name in bold, then review normal
                 }
             }
         }

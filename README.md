@@ -25,8 +25,10 @@ You should be able to build and run at this point.
 Usage should be self-explanitory. Launch app and you will see a gridview
 of movies. Select a movie and a detail screen will show for the movie.
 
-There is still missing functionality including:
-- trailer and reviews in the detail
+Required functionality implemented.
+Optional functionality is missing including:
+- contentprovider
+- sharing functionality
 
 ## History
 

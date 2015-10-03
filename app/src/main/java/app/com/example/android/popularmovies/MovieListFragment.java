@@ -87,6 +87,12 @@ public class MovieListFragment extends Fragment {
         if (getFragmentManager().findFragmentById(R.id.movielist_fragment) != null) {
             //highlight...
             //TODO - actually don't do this. Don't like the visual impact of selection. Be stateless...
+        } else {
+            //if in "phone" view, when we go back to the list screen, lets hide
+            //the share action (yes, we could leave it there and it would work from last
+            //selected but kind of confusing)
+            MainActivity.mbShowShare = false;
+            getActivity().invalidateOptionsMenu();
         }
     }
 

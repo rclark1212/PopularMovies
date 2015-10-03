@@ -1,5 +1,6 @@
 package app.com.example.android.popularmovies;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -7,7 +8,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -34,7 +41,6 @@ import java.util.Locale;
  */
 public class MovieDetailFragment extends Fragment {
     final static String ARG_POSITION = "position";      //used to pass which item selected when we load fragment
-    //private int mCurrentPosition = -1;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -77,6 +83,7 @@ public class MovieDetailFragment extends Fragment {
             updateMovieView(-1);
         }
     }
+
 
     private void enableMovieViewObject(Boolean bEnable, View object) {
 
@@ -276,17 +283,22 @@ public class MovieDetailFragment extends Fragment {
                 }
             }
 
+            MainActivity.mbShowShare = false;           //by default don't show share
             if (tTrailers != null) {
                 if (MainActivity.mData.mTrailers.size() > 0) {
-                    //mark reviews text as blue
+                    //mark trailers text as blue
                     tTrailers.setTextColor(Color.BLUE);
+                    MainActivity.mbShowShare = true;    //unless we have trailers
                 } else {
-                    //mark reviews text as black
+                    //mark trailers text as black
                     tTrailers.setTextColor(Color.BLACK);
                 }
             }
 
-            //If there were a semaphone, set it here.
+            // And, update the options menu to get the share option...
+            getActivity().invalidateOptionsMenu();
+
+            //If there were a semaphore, set it here.
         }
     }
 }

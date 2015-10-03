@@ -12,9 +12,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.ShareActionProvider;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -80,12 +82,14 @@ public class MainActivity extends AppCompatActivity
     public static MovieData mData;                              //this object will be used by other clases... make it public
                                                                 //this is the primary database of movies
     public static int mLastSelected = -1;                       //last selected movie
+    public static Boolean mbShowShare = false;                  //indicates if share menu option should be shown
 
     public final static int START_ID_TRAILERS = 110;            //Start ID for trailers textviews
     public final static int START_ID_REVIEWS = 310;             //Start ID for reviews textviews
     public final static int TEXT_MARGIN = 6;                    //Margin to use on trailer/review list
     public final static int START_BUTTON_TEXT_MARGIN = 20;      //Margin to give on start button for trailer list
     public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;   //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
+    public final static String YOUTUBE_URL = "http://www.youtube.com/watch?v=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,7 +170,37 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        // And implement a share action
+        // Fetch/store provider
+        // But only if there is data to share
+        MenuItem item = menu.findItem(R.id.menu_item_share);
+
+        if (mbShowShare == true) {
+
+            ShareActionProvider shareAction = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+
+            if (shareAction != null) {
+                shareAction.setShareIntent(createShareIntent());
+            }
+        } else {
+            //hide the share
+            item.setVisible(false);
+        }
+
         return true;
+    }
+
+    //
+    // And share the first video URL
+    //
+    private Intent createShareIntent() {
+        //set intent
+        Intent intentShare = new Intent(Intent.ACTION_SEND);
+        intentShare.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        intentShare.setType("text/plain");
+        intentShare.putExtra(Intent.EXTRA_TEXT, YOUTUBE_URL + mData.mTrailers.get(0).key);
+        return intentShare;
     }
 
     @Override
@@ -441,7 +475,7 @@ public class MainActivity extends AppCompatActivity
             startActivity(intent);
         }catch (ActivityNotFoundException ex){
             Intent intent=new Intent(Intent.ACTION_VIEW,
-                    Uri.parse("http://www.youtube.com/watch?v="+id));
+                    Uri.parse(YOUTUBE_URL+id));
             startActivity(intent);
         }
     }

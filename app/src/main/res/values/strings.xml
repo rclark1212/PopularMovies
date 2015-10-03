@@ -21,4 +21,5 @@
     <string name="reviews">Reviews</string>
     <string name="alert_internet">You need internet access to run this application"</string>
     <string name="OK">OK</string>
+    <string name="action_share">Share</string>
 </resources>

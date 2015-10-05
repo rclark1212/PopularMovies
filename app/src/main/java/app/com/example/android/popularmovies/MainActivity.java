@@ -20,7 +20,6 @@ import android.support.v7.widget.ShareActionProvider;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -34,12 +33,6 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
-
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 
 /*  OK - summary of project
@@ -54,7 +47,7 @@ import java.util.ArrayList;
         c) Both UIs will also have a trailers option and a reviews text box. As well as
         ability to mark/store as favorite locally
 
-    Still TODO - trailers list, trailer launching and reviews
+    Still TODO - content provider
 
     Trailers and reviews. Ideally I would like the views to be collapsed with a header of
     just "Trailers" and "Reviews". And when you click either of these headers, they expand with
@@ -83,6 +76,7 @@ public class MainActivity extends AppCompatActivity
                                                                 //this is the primary database of movies
     public static int mLastSelected = -1;                       //last selected movie
     public static Boolean mbShowShare = false;                  //indicates if share menu option should be shown
+    public static Boolean mbInternet = true;                    //set to false if no internet (and only show favorites)
 
     public final static int START_ID_TRAILERS = 110;            //Start ID for trailers textviews
     public final static int START_ID_REVIEWS = 310;             //Start ID for reviews textviews
@@ -99,6 +93,7 @@ public class MainActivity extends AppCompatActivity
         // First, do we have internet?
         //
         if (isOnline() == false) {
+            mbInternet = false;
             new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.alert_internet))
                     .setCancelable(false)
@@ -106,7 +101,7 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             // exit
-                            finish();
+                            //finish(); //don't exit... Let favorites show
                         }
                     }).create().show();
         }
@@ -213,11 +208,16 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             //launch settings
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            //if view ordering changed, should really clear out last selected flag...
-            //Do it for any view ordering change at this point.
-            mLastSelected = -1;
+            //But only if we have internet (else forced to sort by favorites only
+            if (mbInternet == true) {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                //if view ordering changed, should really clear out last selected flag...
+                //Do it for any view ordering change at this point.
+                mLastSelected = -1;
+            } else {
+                Toast.makeText(getApplicationContext(),R.string.settings_internet,Toast.LENGTH_SHORT).show();
+            }
             return true;
         } else if (id == R.id.action_about) {
             //show the about box...

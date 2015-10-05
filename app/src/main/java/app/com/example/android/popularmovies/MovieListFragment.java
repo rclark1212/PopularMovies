@@ -119,9 +119,14 @@ public class MovieListFragment extends Fragment {
     private void updateMovies() {
 
         //get ordering preference...
-        //1 = popularity, 2 = rating (and soon add favorites)
+        //1 = popularity, 2 = rating, 3 is favorites
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String ordering = prefs.getString(getString(R.string.pref_ordering_key), getString(R.string.pref_ordering_default));
+
+        if (MainActivity.mbInternet == false) {
+            //if no internet, force the ordering to favorites
+            ordering = getString(R.string.pref_value_favorites);
+        }
 
         //throw some hack data up... For test only.
         //MainActivity.mData.clear();

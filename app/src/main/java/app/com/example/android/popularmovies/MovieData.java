@@ -105,7 +105,7 @@ public class MovieData {
 
         String sortby = TMDB_SORTBY_POPULARITY;     //default to popularity search
 
-        if (ordering.equals("2")) {                 //sort by rating
+        if (ordering.equals(mCtx.getString(R.string.pref_value_rating))) {                 //sort by rating
             sortby = TMDB_SORTBY_RATING;            //but if by rating (per settings), sort by rating
         }
 
@@ -163,7 +163,7 @@ public class MovieData {
         }
 
         //Okay - deal with favorites here (or else process a discovery query
-        if (ordering.equals("3")) {                 //load favorites
+        if (ordering.equals(mCtx.getString(R.string.pref_value_favorites))) {                 //load favorites
 
             //  First get the favorites
             String[] favorites = getFavorites();
@@ -453,7 +453,7 @@ public class MovieData {
                     String review = jReview.getString(TMDB_REVIEW);
 
                     //and add to our array (use html tags for review)
-                    mReviews.add("<b>" + author + "</b>: " + review);   //format of author name in bold, then review normal
+                    mReviews.add("<b>" + author + "</b> " + review);   //format of author name in bold, then review normal
                 }
             }
         }
@@ -578,8 +578,29 @@ public class MovieData {
         }
     }
 
+    //********************************************************************************************
+    //  FAVORITES SECTION IS BELOW
+    //  There are 2 approaches to favorites
+    //  The first approach taken was to save/load favorites from shared preferences. These routines
+    //  have been left in but are not currently used (simply left as a code fallback example)
+    //  The second approach is to save/load favorites + some movie data to a content provider
+    //  backed by an SQL database.
     //
-    // General favorites notes:
+    //  The save/load favorite routes are just stubs which call either the shared preferences
+    //  or the content provider backing store routines
+    //
+    //********************************************************************************************
+
+    private void saveFavorites() {
+        saveFavoritesSharedPreferences();
+    }
+
+    private void loadFavorites() {
+        loadFavoritesSharedPreferences();
+    }
+
+    //
+    // General favorites notes (for shared preferences):
     // Save/load favorites from shared preferences. Store a list of MovieIDs as favorites.
     // Now TMDB has a favorites function but you have to log in to use it. Allow favorites
     // without requiring signing up for an account.
@@ -589,7 +610,7 @@ public class MovieData {
     // Scan through main array and save off all the movieIDs which are marked as favorite
     // Saved as a comma delimited preference string of MovieIDs
     //
-    private void saveFavorites() {
+    private void saveFavoritesSharedPreferences() {
 
         // as the list of movies may change depending on search and we don't want to overwrite favorites
         // that are defined for movies not in the list, first read the current favorites list and add those
@@ -640,7 +661,7 @@ public class MovieData {
     // Note that this routine both "gets" the favorite list from preferences as well as
     // processes favorites against the currently loaded movie database
     //
-    private void loadFavorites() {
+    private void loadFavoritesSharedPreferences() {
         //Get the string from shared preferences
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mCtx);
         Set<String> favorites = pref.getStringSet(mCtx.getResources().getString(R.string.favorites_list),null);
@@ -666,7 +687,7 @@ public class MovieData {
     // Gets favorites (and returns as a string array)
     // Needed for sorting by favorites option.
     //
-    private String[] getFavorites() {
+    private String[] getFavorites() {       //TODO - fix this up once you reorg code...
         //Get the string from shared preferences
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mCtx);
         Set<String> favorites = pref.getStringSet(mCtx.getResources().getString(R.string.favorites_list),null);

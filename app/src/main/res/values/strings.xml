@@ -19,7 +19,11 @@
     <string name="user_rating">user rating</string>
     <string name="trailers">Trailers</string>
     <string name="reviews">Reviews</string>
-    <string name="alert_internet">You need internet access to run this application"</string>
+    <string name="alert_internet">No internet! You will only be able to access some information from your marked favorite movies without internet"</string>
     <string name="OK">OK</string>
     <string name="action_share">Share</string>
+    <string name="settings_internet">You cannot change sort by options when you do not have internet</string>
+    <string name="pref_value_popularity">1</string>
+    <string name="pref_value_rating">2</string>
+    <string name="pref_value_favorites">3</string>
 </resources>

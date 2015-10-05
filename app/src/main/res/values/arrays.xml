@@ -7,9 +7,9 @@
     </string-array>
 
     <string-array name="pref_ordering_listValues">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
+        <item>@string/pref_value_popularity</item>
+        <item>@string/pref_value_rating</item>
+        <item>@string/pref_value_favorites</item>
     </string-array>
 
 </resources>

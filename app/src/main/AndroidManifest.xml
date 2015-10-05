@@ -26,6 +26,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="app.com.example.android.popularmovies.MainActivity" />
         </activity>
+        <provider
+            android:name=".FavoritesContentProvider"
+            android:authorities="app.com.example.popularmovies.contentprovider" >
+        </provider>
     </application>
 
 </manifest>

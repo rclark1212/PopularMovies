@@ -27,6 +27,8 @@ import android.text.TextUtils;
  *  Changed field names/DB names
  *  Extended fields
  *  Cleaned up some routines like GetType
+ *  Used to store/retrieve favorites data including movieID and movie metadata.
+ *  Used by MovieData class
  */
 public class FavoritesContentProvider extends ContentProvider {
 

@@ -34,8 +34,6 @@ public class ImageAdapter extends BaseAdapter {
         if (convertView == null) {
 
             // if not, create and inflate a new gridView
-            gridView = new View(mContext);
-
             LayoutInflater inflater = (LayoutInflater) mContext
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -64,7 +62,9 @@ public class ImageAdapter extends BaseAdapter {
         if (posterpath != null) {
             Picasso.with(mContext).load(posterpath).into(imageView);
         } else {
-            //throw up some generic image... Should only be used with testing
+            //throw up some generic image...
+            //note - will use this image in the case of being disconnected from internet (or there
+            //not being a valid image in TMDB)
             imageView.setImageResource(R.drawable.cinema_strip_movie_film);
         }
 

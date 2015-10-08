@@ -31,6 +31,7 @@ import java.util.Set;
  * Will also provide utility functions for the movies
  */
 public class MovieData {
+    //all sorts of TMDB constants used for web queries
     private static final String TMDB_API_BASE = "api.themoviedb.org";
     private static final String TMDB_VERSION = "3";
     private static final String TMDB_DISCOVERY = "discover";
@@ -66,6 +67,7 @@ public class MovieData {
         mCtx = ctx;
     }
 
+    //Only used for testing. Not used for real build.
     public void hackPopulateList() {
         //hack function
         for (int i = 0; i < 40; i++) {
@@ -103,7 +105,7 @@ public class MovieData {
      */
     public void loadTMDBFromNetwork(String ordering, String apikey)
     {
-        // If no internet, load data from backing store
+        // If no internet, load data from backing store in content provider and return
         if (MainActivity.mbInternet == false) {
             loadFavorites(true);
             return;
@@ -129,7 +131,7 @@ public class MovieData {
             So we could just build a big list by quering twice (both ways) and then discarding
             the movies that don't match favorites.
             Now the downside of the second approach is if discovery/popularity queries change,
-            you will lose your favorites. So will go ahead and take first approach...
+            you will lose your favorites. So will go ahead and take first (better) approach...
 
          */
 
@@ -209,8 +211,8 @@ public class MovieData {
                         //now parse the movie json data captured earlier
                         getMovieDataFromJson(moviesJsonStr, false);
                         loadFavorites(false);                    //note that every movie a favorite. We could optimize
-                        //here and just blanket set every favorite flag but
-                        //like the code cleanliness of just calling function again
+                                                                //here and just blanket set every favorite flag but
+                                                                //like the code cleanliness of just calling function again
                     } catch (JSONException e) {
                         Log.e(LOG_TAG, "JSON Error parsing movie data ", e);
 
@@ -405,7 +407,7 @@ public class MovieData {
         final String TMDB_REVIEW = "content";
 
         final String TMDB_VIDSITE = "site";         //must be "YouTube" for us to load
-        final String TMDB_VIDTYPE = "type";         //maybe must be of type "Trailer" for us to load
+        final String TMDB_VIDTYPE = "type";
         final String TMDB_VIDNAME = "name";
         final String TMDB_VIDKEY = "key";
 
@@ -413,7 +415,6 @@ public class MovieData {
             //Parse trailers
             JSONObject trailersJSON = new JSONObject(trailersJsonStr);
             JSONArray trailersArray = trailersJSON.getJSONArray(TMDB_LIST);
-            ;
 
             //and now start reading in the data...
             if (trailersArray != null) {
@@ -447,7 +448,6 @@ public class MovieData {
         if (reviewsJsonStr != null) {
             JSONObject reviewsJSON = new JSONObject(reviewsJsonStr);
             JSONArray reviewsArray = reviewsJSON.getJSONArray(TMDB_LIST);
-            ;
 
             //and now start reading in the data...
             if (reviewsArray != null) {

@@ -241,7 +241,7 @@ public class MainActivity extends AppCompatActivity
             return true;
         } else if (id == R.id.action_about) {
             //show the about box...
-            //use a popup window
+            //use a popup window just for fun (although it is a bit ugly)
             LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
             PopupWindow pw = new PopupWindow(inflater.inflate(R.layout.about_box, null, false),ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT, true);
@@ -328,7 +328,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     //
-    //  Add utility routine to check if we have internet connection. Check on start
+    //  Utility routine to check if we have internet connection. Check on start
     //
     public boolean isOnline() {
         ConnectivityManager cm =
@@ -513,10 +513,9 @@ public class MainActivity extends AppCompatActivity
             if (clickID >= START_ID_REVIEWS) {
                 //Do nothing. Reviews don't do anything on click
                 //clickPostion = clickID - START_ID_REVIEWS;
-                //Toast.makeText(getApplication(),"yay! you clicked item " + clickPostion + " for reviews",Toast.LENGTH_SHORT).show();
             } else {
+                //user clicked a trailer
                 clickPostion = clickID - START_ID_TRAILERS;
-                //Toast.makeText(getApplication(),"yay! you clicked item " + clickPostion + " for trailers",Toast.LENGTH_SHORT).show();
                 //Start a youtube intent
                 watchYoutubeVideo(mData.mTrailers.get(clickPostion).key);
             }

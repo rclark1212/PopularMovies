@@ -58,9 +58,7 @@ public class MovieDetailFragment extends Fragment {
             // This should only be hit by tablet on initial conditions (app launch). Nothing selected.
             // A couple options here - we could blank this fragment. But that would look weird.
             // We could put up a screen saying "please select a movie". But kind of redundant.
-            // Instead, how about just setting the detail screen to the first movie in the list?
-            // Nope - won't work. Race condition on loading data. Instead, lets pass in an argument
-            // we can use to blank screen of data
+            // Instead, lets pass in an argument we can use to blank screen of data
             updateMovieView(-1);
         }
     }

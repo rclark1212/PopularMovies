@@ -1,8 +1,6 @@
 package app.com.example.android.popularmovies;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -10,18 +8,11 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -63,7 +54,6 @@ public class MovieListFragment extends Fragment {
 
         //and listen for a click
         m_grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            //TODO
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //once a grid item is clicked, open up or update the detail view

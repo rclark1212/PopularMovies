@@ -4,11 +4,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Movie;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -605,7 +602,6 @@ public class MovieData {
     //
     //********************************************************************************************
 
-    //TODO - here...
     private void saveFavorites() {
         //saveFavoritesSharedPreferences();
         saveFavoritesCP();

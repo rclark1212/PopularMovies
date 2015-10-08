@@ -23,7 +23,10 @@ import android.text.TextUtils;
  * Content provider for popular movies
  * Note - rewrote content provider based on a better/more concise example.
  * Derived from example at http://www.tutorialspoint.com/android/android_content_providers.htm
- * TODO - extend comments
+ * Made some small modifications:
+ *  Changed field names/DB names
+ *  Extended fields
+ *  Cleaned up some routines like GetType
  */
 public class FavoritesContentProvider extends ContentProvider {
 

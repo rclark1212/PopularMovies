@@ -26,16 +26,17 @@ Usage should be self-explanitory. Launch app and you will see a gridview
 of movies. Select a movie and a detail screen will show for the movie.
 
 Required functionality implemented.
-Optional functionality is missing including:
+Optional functionality implemented including:
 - contentprovider
 - sharing functionality
 
 ## History
 
-First iteration for phase 1 of nanodegree
+Second iteration for phase 2 of nanodegree
 
 ## Credits
 
 TMDB APIs (and database)
 MyKong example of a custom imageadapter for gridview
+www.tutorialspoint.com/android/android_content_providers.htm for example of Content Providers.
 Previous projects for android nanodegree

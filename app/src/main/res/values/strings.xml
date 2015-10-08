@@ -20,6 +20,7 @@
     <string name="trailers">Trailers</string>
     <string name="reviews">Reviews</string>
     <string name="alert_internet">No internet! You will only be able to access some information from your marked favorite movies without internet"</string>
+    <string name="fatal_internet">No internet! You need internet or a stored favorites list to use this application"</string>
     <string name="OK">OK</string>
     <string name="action_share">Share</string>
     <string name="settings_internet">You cannot change sort by options when you do not have internet</string>

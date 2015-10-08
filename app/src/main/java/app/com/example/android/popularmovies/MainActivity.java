@@ -33,6 +33,8 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
 import java.util.ArrayList;
 
 /*  OK - summary of project
@@ -46,8 +48,7 @@ import java.util.ArrayList;
         b) Tablet - detail screen will be a popup. Re-use fragment as dialog...
         c) Both UIs will also have a trailers option and a reviews text box. As well as
         ability to mark/store as favorite locally
-
-    Still TODO - content provider
+    5) Both the share and CP functionality have been implemented.
 
     Trailers and reviews. Ideally I would like the views to be collapsed with a header of
     just "Trailers" and "Reviews". And when you click either of these headers, they expand with
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity
     public static int mLastSelected = -1;                       //last selected movie
     public static Boolean mbShowShare = false;                  //indicates if share menu option should be shown
     public static Boolean mbInternet = true;                    //set to false if no internet (and only show favorites)
+    private Boolean mbFavoritesExist = false;                   //internal check to see if favorites db exists on start
 
     public final static int START_ID_TRAILERS = 110;            //Start ID for trailers textviews
     public final static int START_ID_REVIEWS = 310;             //Start ID for reviews textviews
@@ -94,14 +96,32 @@ public class MainActivity extends AppCompatActivity
         //
         if (isOnline() == false) {
             mbInternet = false;
+            String message;
+
+            //check if there is a favorites database here. If not, exit with message. If favorites, allow operation
+            File dbFile = getApplicationContext().getDatabasePath(FavoritesContentProvider.DATABASE_NAME);
+            if (dbFile != null) {
+                mbFavoritesExist = dbFile.exists();
+            }
+
+            //Show a different warning if there is no favorites DB (and exit)
+            //vs if there is a favorites DB (allow operation).
+            if (mbFavoritesExist) {
+                message = getString(R.string.alert_internet);
+            } else {
+                message = getString(R.string.fatal_internet);
+            }
+
             new AlertDialog.Builder(this)
-                    .setMessage(getString(R.string.alert_internet))
+                    .setMessage(message)
                     .setCancelable(false)
                     .setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             // exit
-                            //finish(); //don't exit... Let favorites show
+                            if (mbFavoritesExist == false) {
+                                finish(); //exit if no favorites
+                            }
                         }
                     }).create().show();
         }

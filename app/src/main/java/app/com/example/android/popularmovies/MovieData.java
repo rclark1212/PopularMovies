@@ -1,19 +1,25 @@
 package app.com.example.android.popularmovies;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Movie;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -100,6 +106,12 @@ public class MovieData {
      */
     public void loadTMDBFromNetwork(String ordering, String apikey)
     {
+        // If no internet, load data from backing store
+        if (MainActivity.mbInternet == false) {
+            loadFavorites(true);
+            return;
+        }
+
         // Will contain the raw JSON response as a string.
         String moviesJsonStr = null;
 
@@ -166,7 +178,7 @@ public class MovieData {
         if (ordering.equals(mCtx.getString(R.string.pref_value_favorites))) {                 //load favorites
 
             //  First get the favorites
-            String[] favorites = getFavorites();
+            String[] favorites = getFavoritesList();
 
             //Check if there are any favorites...
             if (favorites != null) {
@@ -199,7 +211,7 @@ public class MovieData {
                     try {
                         //now parse the movie json data captured earlier
                         getMovieDataFromJson(moviesJsonStr, false);
-                        loadFavorites();                    //note that every movie a favorite. We could optimize
+                        loadFavorites(false);                    //note that every movie a favorite. We could optimize
                         //here and just blanket set every favorite flag but
                         //like the code cleanliness of just calling function again
                     } catch (JSONException e) {
@@ -241,7 +253,7 @@ public class MovieData {
             try {
                 //now parse the movie json data captured earlier
                 getMovieDataFromJson(moviesJsonStr, true);
-                loadFavorites();                    //and parse/apply favorites
+                loadFavorites(false);                    //and parse/apply favorites
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "JSON Error parsing movie data ", e);
 
@@ -587,16 +599,183 @@ public class MovieData {
     //  backed by an SQL database.
     //
     //  The save/load favorite routes are just stubs which call either the shared preferences
-    //  or the content provider backing store routines
+    //  or the content provider backing store routines. If you want to use shared preferences,
+    //  comment out the CP routines and uncomment the SharedPreference routines in the 3 stub
+    //  functions below.
     //
     //********************************************************************************************
 
+    //TODO - here...
     private void saveFavorites() {
-        saveFavoritesSharedPreferences();
+        //saveFavoritesSharedPreferences();
+        saveFavoritesCP();
     }
 
-    private void loadFavorites() {
-        loadFavoritesSharedPreferences();
+    private void loadFavorites(Boolean bLoadData) {
+        //loadFavoritesSharedPreferences();
+        loadFavoritesCP(bLoadData);
+    }
+
+    String[] getFavoritesList() {
+        //return getFavoritesFromSharedPreferences();
+        return loadFavoritesListCP();
+    }
+
+    //
+    // General favorites notes (for content provider)
+    // The save favorites will store most of the detailed information per movie
+    // into the SQL database backing the content provider (it will not store reviews, trailers
+    // or images). The save favorites for the content provider is a strict 1:1 replacement
+    // of the shared preferences routine
+    // The load favorites function is a bit different. If there is internet, it will perform
+    // the same function as the sharedpreferences routine. Which is to only load the movie IDs
+    // which have been marked as favorite. Everything else will be loaded from TMDB (since TMDB
+    // should be the most up to date source of truth).
+    // However, if there is no internet, the load favorites command will also load the database
+    // with the data stored in SQL.
+    //
+
+    //
+    //  Save the favorites including the metadata into the content provider
+    //
+    private void saveFavoritesCP() {
+
+        //if no movies yet... return
+        if (mMovies.size() == 0) return;
+
+        //send a cmd to delete everything - for testing only
+        //mCtx.getContentResolver().delete(FavoritesContentProvider.CONTENT_URI, null, null);
+
+        //create the database object
+        ContentValues values = new ContentValues();
+
+        //get the DB reference...
+        String URL = FavoritesContentProvider.URL;
+        Uri favorites = Uri.parse(URL);
+
+        //and set the favorites...
+        for (int i = 0; i < mMovies.size(); i++) {
+            //Does the movie already exist in DB?
+            String[] tableColumns = new String[] { FavoritesContentProvider.COLUMN_TMDBID };
+            String whereClause = FavoritesContentProvider.COLUMN_TMDBID + "=?";
+            String[] whereArgs = new String[] { mMovies.get(i).getMovieID() };
+            Cursor c = mCtx.getContentResolver().query(favorites,tableColumns, whereClause, whereArgs, null);
+
+            //if the favorite is already in the DB then...
+            if (c.getCount() != 0) {
+                //if this movie no longer a favorite, remove...
+                if (mMovies.get(i).getFavorite() == false) {
+                    mCtx.getContentResolver().delete(FavoritesContentProvider.CONTENT_URI,whereClause,whereArgs);
+                }
+            } else {
+                //if not already in the DB and this is a favorite that should be added, add
+                if (mMovies.get(i).getFavorite() == true) {
+                    //okay - a favorite. Set up the value record
+                    values.put(FavoritesContentProvider.COLUMN_RATING, mMovies.get(i).getRating());
+                    values.put(FavoritesContentProvider.COLUMN_RELEASEDATE, mMovies.get(i).getReleaseDate());
+                    values.put(FavoritesContentProvider.COLUMN_SUMMARY, mMovies.get(i).getSynopsis());
+                    values.put(FavoritesContentProvider.COLUMN_TITLE, mMovies.get(i).getTitle());
+                    values.put(FavoritesContentProvider.COLUMN_TMDBID, mMovies.get(i).getMovieID());
+
+                    //and store it off into DB
+                    Uri uri = mCtx.getContentResolver().insert(FavoritesContentProvider.CONTENT_URI, values);
+                }
+            }
+        }
+
+    }
+
+    //
+    //  Load the favorites into favorites array from the content provider
+    //  if bLoadData is true, also load the metadata. Note that the main array
+    //  should always have been cleared in this case
+    //
+    private void loadFavoritesCP(Boolean bLoadData) {
+
+        //Does the database exist?
+        File dbFile = mCtx.getDatabasePath(FavoritesContentProvider.DATABASE_NAME);
+        if (dbFile != null) {
+            if (!dbFile.exists())
+                return;
+        }
+
+        // Retrieve records
+        String URL = FavoritesContentProvider.URL;
+        Uri favorites = Uri.parse(URL);
+        Cursor c = mCtx.getContentResolver().query(favorites, null, null, null, null);
+
+        //if we are loading data, just loop through the entire list
+        if (bLoadData) {
+            if (c.moveToFirst()) {
+                //loop through everything and load the data
+                do {
+                    String MovieID = c.getString(c.getColumnIndex(FavoritesContentProvider.COLUMN_TMDBID));
+                    String MovieTitle = c.getString(c.getColumnIndex(FavoritesContentProvider.COLUMN_TITLE));
+                    String MovieDesc = c.getString(c.getColumnIndex(FavoritesContentProvider.COLUMN_SUMMARY));
+                    String MovieRating = c.getString(c.getColumnIndex(FavoritesContentProvider.COLUMN_RATING));
+                    String MovieRelDate = c.getString(c.getColumnIndex(FavoritesContentProvider.COLUMN_RELEASEDATE));
+
+                    MovieItem mi = new MovieItem(MovieID,MovieTitle,null,MovieDesc,MovieRating,MovieRelDate,true,0);
+
+                    mMovies.add(mi);
+
+                } while (c.moveToNext());
+            }
+        } else {
+            //loop through movies and see if the movie is in the favorites list
+            for (int i = 0; i < mMovies.size(); i++) {
+                String[] tableColumns = new String[] { FavoritesContentProvider.COLUMN_TMDBID };
+                String whereClause = FavoritesContentProvider.COLUMN_TMDBID + "=?";
+                String[] whereArgs = new String[] { mMovies.get(i).getMovieID() };
+
+                c = mCtx.getContentResolver().query(favorites,tableColumns, whereClause, whereArgs, null);
+                //if movie found by cursor, set favorite... else don't.
+                if (c.getCount() != 0) {
+                    mMovies.get(i).setFavorite(true);
+                } else {
+                    mMovies.get(i).setFavorite(false);
+                }
+            }
+        }
+        c.close();
+    }
+
+    //
+    // Load the list of favorites from content provider
+    //
+    String[] loadFavoritesListCP() {
+
+        //Does the database exist?
+        File dbFile = mCtx.getDatabasePath(FavoritesContentProvider.DATABASE_NAME);
+        if (dbFile != null) {
+            if (!dbFile.exists())
+                return null;
+        }
+
+        //create an array to return
+        ArrayList<String> FavoritesList = new ArrayList<String>();
+
+        // Retrieve records
+        String URL = FavoritesContentProvider.URL;
+        Uri favorites = Uri.parse(URL);
+        Cursor c = mCtx.getContentResolver().query(favorites, null, null, null, null);
+
+        //just loop through the entire list
+        if (c.moveToFirst()) {
+            do {
+                String MovieID = c.getString(c.getColumnIndex(FavoritesContentProvider.COLUMN_TMDBID));
+                FavoritesList.add(MovieID);
+            } while (c.moveToNext());
+        }
+
+        //and close the cursor...
+        c.close();
+
+        //convert to proper return type
+        String[] retVal = new String[FavoritesList.size()];
+        retVal = FavoritesList.toArray(retVal);
+
+        return retVal;
     }
 
     //
@@ -687,7 +866,7 @@ public class MovieData {
     // Gets favorites (and returns as a string array)
     // Needed for sorting by favorites option.
     //
-    private String[] getFavorites() {       //TODO - fix this up once you reorg code...
+    private String[] getFavoritesFromSharedPreferences() {
         //Get the string from shared preferences
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(mCtx);
         Set<String> favorites = pref.getStringSet(mCtx.getResources().getString(R.string.favorites_list),null);

@@ -677,6 +677,8 @@ public class MovieData {
                     Uri uri = mCtx.getContentResolver().insert(FavoritesContentProvider.CONTENT_URI, values);
                 }
             }
+            //close this cursor
+            c.close();
         }
 
     }

@@ -10,9 +10,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+
+import org.w3c.dom.Text;
 
 /**
  * Created by rclark on 9/9/2015.
@@ -22,6 +26,10 @@ import com.squareup.picasso.Picasso;
  */
 public class MovieDetailFragment extends Fragment {
     final static String ARG_POSITION = "position";      //used to pass which item selected when we load fragment
+    final static String ARG_SCROLLY = "yscroll";        //scroll position of scrollview
+    final static String ARG_REVIEWS = "reviews";        //open(1), close(0) of reviews element
+    final static String ARG_TRAILERS = "trailers";      //open(1), close(0) of trailers element
+    private ScrollView mSV;                             //need to share a scroll view between classes
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -31,7 +39,26 @@ public class MovieDetailFragment extends Fragment {
         // the previous selection set by onSaveInstanceState().
         // This is primarily necessary when in the two-pane layout.
         if (savedInstanceState != null) {
+            //pick up the last movie selected from the bundle (note, used in OnStart)
             MainActivity.mLastSelected = savedInstanceState.getInt(ARG_POSITION);
+            //pick up last scroll position of the detail view (note, used in OnStart)
+            if (savedInstanceState.containsKey(ARG_SCROLLY)) {
+                MainActivity.mLastDetailScrollY = savedInstanceState.getInt(ARG_SCROLLY);
+            }
+            //pick up open/close state of review/trailer UI elements (note, used in OnStart)
+            if (savedInstanceState.containsKey(ARG_REVIEWS)) {
+                if (savedInstanceState.getInt(ARG_REVIEWS) != 0) {
+                    MainActivity.mbLastDetailReview = true;
+                } else {
+                    MainActivity.mbLastDetailReview = false;
+                }
+
+                if (savedInstanceState.getInt(ARG_TRAILERS) != 0) {
+                    MainActivity.mbLastDetailTrailers = true;
+                } else {
+                    MainActivity.mbLastDetailTrailers = false;
+                }
+            }
         }
 
         // Inflate the layout for this fragment and return
@@ -51,9 +78,13 @@ public class MovieDetailFragment extends Fragment {
         if (args != null) {
             // Set article based on argument passed in
             updateMovieView(args.getInt(ARG_POSITION));
+            //And process scroll position, review/trailer state
+            processDetailViewRestore();
         } else if (MainActivity.mLastSelected != -1) {
             // Set article based on saved instance state defined during onCreateView
             updateMovieView(MainActivity.mLastSelected);
+            //And process scroll position, review/trailer state
+            processDetailViewRestore();
         } else {
             // This should only be hit by tablet on initial conditions (app launch). Nothing selected.
             // A couple options here - we could blank this fragment. But that would look weird.
@@ -63,7 +94,51 @@ public class MovieDetailFragment extends Fragment {
         }
     }
 
+    //
+    // This routine restores the state of the detail view in the case of a rotate or being punted out of memory
+    // (processes the restorestate bundle for the UI)
+    //
+    private void processDetailViewRestore() {
+        //And process scroll position, review/trailer state - do scroll first
+        //note - only do this once (to restore a saved view
+        if ((MainActivity.mLastDetailScrollY != 0) || (MainActivity.mbLastDetailReview == true) || (MainActivity.mbLastDetailTrailers == true)){
+            mSV = (ScrollView) getActivity().findViewById(R.id.detail_fragment).getParent();
+            if (mSV != null) {
+                mSV.post(new Runnable() {
+                public void run() {
+                    //process scroll action
+                    if (MainActivity.mLastDetailScrollY != 0) {
+                        mSV.scrollTo(0, MainActivity.mLastDetailScrollY);
+                        MainActivity.mLastDetailScrollY = 0;
+                    }
 
+                    //process reviews
+                    if (MainActivity.mbLastDetailReview == true) {
+                        TextView text = (TextView) getActivity().findViewById(R.id.detail_reviews);
+                        if (text != null) {
+                            if (text.getVisibility() == View.VISIBLE)
+                                text.performClick();
+                        }
+                        MainActivity.mbLastDetailReview = false;
+                    }
+                        //Then trailers
+                    if (MainActivity.mbLastDetailTrailers == true) {
+                        TextView text = (TextView) getActivity().findViewById(R.id.detail_trailers);
+                        if (text != null) {
+                            if (text.getVisibility() == View.VISIBLE)
+                                text.performClick();
+                        }
+                        MainActivity.mbLastDetailTrailers = false;
+                    }
+                }
+            });
+            }
+        }
+    }
+
+    //
+    // Enables or disables visibility of an object on the detail page
+    //
     private void enableMovieViewObject(Boolean bEnable, View object) {
 
         if (object == null) return;
@@ -77,9 +152,10 @@ public class MovieDetailFragment extends Fragment {
     }
 
 
+    //
+    //update detail view based on position selection
+    //
     public void updateMovieView(int position) {
-
-        //update detail view based on position selection
 
         //First though, lets see if this is initial launch and we should disable the view? (nothing selected)
         Boolean bEnableView = true;
@@ -92,11 +168,12 @@ public class MovieDetailFragment extends Fragment {
         if (position >= MainActivity.mData.length()) bEnableView = false;
 
         //And, if explicit, blank out view
-        if (position == -1) bEnableView = false;
+        if (position == -1) {
+            bEnableView = false;
+        }
 
         //show/hide the view...
         //Do this by show/hide the controls
-
         //title
         TextView text = (TextView) getActivity().findViewById(R.id.detail_movietitle);
         enableMovieViewObject(bEnableView, text);
@@ -132,8 +209,21 @@ public class MovieDetailFragment extends Fragment {
         CheckBox checkbox_favs = (CheckBox) getActivity().findViewById(R.id.checkbox_detail_favorite);
         enableMovieViewObject(bEnableView, checkbox_favs);
 
-        //and just return if we are hiding controls...
-        if (bEnableView == false) return;
+        //hide reviews/trailers if they exist...
+        //and then just return if we are hiding controls...
+        if (bEnableView == false) {
+            int i = MainActivity.START_ID_REVIEWS;
+            while (getActivity().findViewById(i) != null) {
+                enableMovieViewObject(bEnableView, getActivity().findViewById(i));
+                i++;
+            }
+            i = MainActivity.START_ID_TRAILERS;
+            while (getActivity().findViewById(i) != null) {
+                enableMovieViewObject(bEnableView, getActivity().findViewById(i));
+                i++;
+            }
+            return;
+        }
 
         //Do title first
         String message = MainActivity.mData.getItem(position).getTitle();
@@ -197,15 +287,37 @@ public class MovieDetailFragment extends Fragment {
         if (MainActivity.mLastSelected >= 0) {
             updateMovieDetails(position);
         }
-
     }
 
+    //save the state
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
         // Save the current article selection in case we need to recreate the fragment
         outState.putInt(ARG_POSITION, MainActivity.mLastSelected);
+        //then save the scroll state of the detail view
+        //find the view
+        ScrollView sv = (ScrollView) getActivity().findViewById(R.id.detail_fragment).getParent();
+        if (sv != null) {
+            outState.putInt(ARG_SCROLLY, sv.getScrollY());
+
+            //check if the trailers are open/closed
+            TextView text = (TextView) getActivity().findViewById(MainActivity.START_ID_TRAILERS);
+            if (text != null) {
+                outState.putInt(ARG_TRAILERS, 1);
+            } else {
+                outState.putInt(ARG_TRAILERS, 0);
+            }
+
+            //check if the reviews are open/closed
+            text = (TextView) getActivity().findViewById(MainActivity.START_ID_REVIEWS);
+            if (text != null) {
+                outState.putInt(ARG_REVIEWS, 1);
+            } else {
+                outState.putInt(ARG_REVIEWS, 0);
+            }
+        }
+        //store off the state
+        super.onSaveInstanceState(outState);
     }
 
     //update the detailed movie data here...
@@ -249,33 +361,34 @@ public class MovieDetailFragment extends Fragment {
         protected void onPostExecute(Long result) {
             //If there was trailer or review data loaded...
             //Mark the review/trailer text as being blue
-            TextView tReviews = (TextView) getView().findViewById(R.id.detail_reviews);
-            TextView tTrailers = (TextView) getView().findViewById(R.id.detail_trailers);
+            if (getView() != null) {
+                TextView tReviews = (TextView) getView().findViewById(R.id.detail_reviews);
+                TextView tTrailers = (TextView) getView().findViewById(R.id.detail_trailers);
 
-            if (tReviews != null) {
-                if (MainActivity.mData.mReviews.size() > 0) {
-                    //mark reviews text as blue
-                    tReviews.setTextColor(Color.BLUE);
-                } else {
-                    //mark reviews text as black
-                    tReviews.setTextColor(Color.BLACK);
+                if (tReviews != null) {
+                    if (MainActivity.mData.mReviews.size() > 0) {
+                        //mark reviews text as blue
+                        tReviews.setTextColor(Color.BLUE);
+                    } else {
+                        //mark reviews text as black
+                        tReviews.setTextColor(Color.BLACK);
+                    }
                 }
-            }
 
-            MainActivity.mbShowShare = false;           //by default don't show share
-            if (tTrailers != null) {
-                if (MainActivity.mData.mTrailers.size() > 0) {
-                    //mark trailers text as blue
-                    tTrailers.setTextColor(Color.BLUE);
-                    MainActivity.mbShowShare = true;    //unless we have trailers
-                } else {
-                    //mark trailers text as black
-                    tTrailers.setTextColor(Color.BLACK);
+                MainActivity.mbShowShare = false;           //by default don't show share
+                if (tTrailers != null) {
+                    if (MainActivity.mData.mTrailers.size() > 0) {
+                        //mark trailers text as blue
+                        tTrailers.setTextColor(Color.BLUE);
+                        MainActivity.mbShowShare = true;    //unless we have trailers
+                    } else {
+                        //mark trailers text as black
+                        tTrailers.setTextColor(Color.BLACK);
+                    }
                 }
+                // And, update the options menu to get the share option...
+                getActivity().invalidateOptionsMenu();
             }
-
-            // And, update the options menu to get the share option...
-            getActivity().invalidateOptionsMenu();
 
             //If there were a semaphore, set it here.
         }

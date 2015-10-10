@@ -24,7 +24,6 @@ public class MovieListFragment extends Fragment {
 
     private GridView m_grid;
     private ImageAdapter m_my_array_adapter;
-    private int mSelected;
 
     //Put in an interface for container activity to implement so that fragment can deliver messages
     public interface OnMovieSelectedListener {
@@ -57,7 +56,6 @@ public class MovieListFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //once a grid item is clicked, open up or update the detail view
-                mSelected = position;
                 mCallback.onMovieSelected(position);
             }
         });
@@ -70,7 +68,11 @@ public class MovieListFragment extends Fragment {
         super.onStart();
 
         //update the movies (reloads the dataset from TMDB and refreshes grid view)
-        updateMovies();
+        //but only do this is the list is dirty or the grid is not populated
+        if ((MainActivity.mData.length() == 0) || (MainActivity.mbListDirty == true)) {
+            MainActivity.mbListDirty = false;
+            updateMovies();
+        }
 
         // When in two-pane layout, set the movie view to highlight the selected list item
         // (We do this during onStart because at the point the listview is available.)
@@ -85,6 +87,7 @@ public class MovieListFragment extends Fragment {
             getActivity().invalidateOptionsMenu();
         }
     }
+
 
     @Override
     public void onAttach(Activity activity) {
@@ -156,15 +159,15 @@ public class MovieListFragment extends Fragment {
             m_my_array_adapter.notifyDataSetChanged();
             m_grid.invalidateViews();   //hmm - I would expect line above to do this. But it does not :(
 
+            //hide the progress bar
+            ProgressBar progress = (ProgressBar) getView().findViewById(R.id.progress_bar);
+            if (progress != null) progress.setVisibility(View.INVISIBLE);
+
             //also need to update the detail view if we are in a 2pane detail tablet view
             //first, are we in 2pane view? (does the movielist fragment exist?
             if (getFragmentManager().findFragmentById(R.id.movielist_fragment) != null) {
                 mCallback.onMovieSelected(MainActivity.mLastSelected);
             }
-
-            //hide the progress bar
-            ProgressBar progress = (ProgressBar) getView().findViewById(R.id.progress_bar);
-            if (progress != null) progress.setVisibility(View.INVISIBLE);
         }
     }
 }

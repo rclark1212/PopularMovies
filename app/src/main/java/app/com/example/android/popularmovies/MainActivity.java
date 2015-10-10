@@ -49,6 +49,18 @@ import java.util.ArrayList;
         c) Both UIs will also have a trailers option and a reviews text box. As well as
         ability to mark/store as favorite locally
     5) Both the share and CP functionality have been implemented.
+    6) Update. Add more appstate to bundle save/restore. Specifically...
+        a) The scroll position of movie list, movie detail (already preserved automatically on suspend/resume, not rotat)
+        b) The open/close state of trailer/reviews
+        c) Note that the currently selected movie in detail view was already saved/restored (but had a bug)
+        UDACITY notes - I've added state preservation through save/restore bundles for scroll position on
+        the gridview and detail view (for the rotate case). I've also added state preservation for the open/close
+        state of the trailer/review UI elements in detail view. Detail view already was preserving the selected
+        movie state (had a small bug). Can't see any other state I would like to save/restore so submitting. If
+        there is other state you think I should be preserving, please let me know specifics.
+        UPDATE - gridview automatically saves its scroll position but I was overriding by too many updates.
+        Instead of forced updates on every start, only update if the list is dirty (dirty = list not exist or order change)
+        UPDATE - no internet on update. Ugg.
 
     Trailers and reviews. Ideally I would like the views to be collapsed with a header of
     just "Trailers" and "Reviews". And when you click either of these headers, they expand with
@@ -78,6 +90,11 @@ public class MainActivity extends AppCompatActivity
     public static int mLastSelected = -1;                       //last selected movie
     public static Boolean mbShowShare = false;                  //indicates if share menu option should be shown
     public static Boolean mbInternet = true;                    //set to false if no internet (and only show favorites)
+    public static Boolean mbListDirty = true;                   //track if the movie list is dirty and needs an update
+    public static int mLastDetailScrollY = 0;                   //save off state of scrollview position
+    public static Boolean mbLastDetailReview = false;           //save off state of review open/close
+    public static Boolean mbLastDetailTrailers = false;         //save off state of trailer open/close
+
     private Boolean mbFavoritesExist = false;                   //internal check to see if favorites db exists on start
 
     public final static int START_ID_TRAILERS = 110;            //Start ID for trailers textviews
@@ -86,16 +103,33 @@ public class MainActivity extends AppCompatActivity
     public final static int START_BUTTON_TEXT_MARGIN = 20;      //Margin to give on start button for trailer list
     public final static double TWO_PANE_SIZE_THRESHOLD = 5.5;   //change this constant to determine axis (in inches) to make as threadshold for 1 pane or 2 pane operation
     public final static String YOUTUBE_URL = "http://www.youtube.com/watch?v=";
+    public final String ARG_NO_INTERNET = "nointernet";         //save off state of no internet
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Super irritating to have the no internet message come up on every rotate... So, see if there was
+        //no internet from last instance and if no internet then, supress the message
+        //note1: if we did not have internet before but now we do have internet, awesome)
+        //note2: specifically do this after the check above for favorites - user could have
+        //"unfavorited" everything
+        //get the old state
+        mbInternet = true;              //always assume internet on start
+
+        int oldNoInternetState = 0;     //assume internet
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(ARG_NO_INTERNET)) {
+                oldNoInternetState = savedInstanceState.getInt(ARG_NO_INTERNET);
+            }
+        }
 
         //
         // First, do we have internet?
         //
         if (isOnline() == false) {
             mbInternet = false;
+
             String message;
 
             //check if there is a favorites database here. If not, exit with message. If favorites, allow operation
@@ -112,18 +146,27 @@ public class MainActivity extends AppCompatActivity
                 message = getString(R.string.fatal_internet);
             }
 
-            new AlertDialog.Builder(this)
-                    .setMessage(message)
-                    .setCancelable(false)
-                    .setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            // exit
-                            if (mbFavoritesExist == false) {
-                                finish(); //exit if no favorites
+            //Show dialog if no favorites (fatal - exit) or if we used to have internet and now don't
+            if ((mbFavoritesExist == false) || (oldNoInternetState == 0) ) {
+                new AlertDialog.Builder(this)
+                        .setMessage(message)
+                        .setCancelable(false)
+                        .setPositiveButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // exit
+                                if (mbFavoritesExist == false) {
+                                    finish(); //exit if no favorites
+                                }
                             }
-                        }
-                    }).create().show();
+                        }).create().show();
+            }
+        }
+
+        //finally, see if there has been an internet state change - if so, mark gridview as dirty
+        if (((mbInternet == true) && (oldNoInternetState != 0))         //we now have internet and did not before
+            || ((mbInternet == false) && (oldNoInternetState == 0))) {  //we now don't have internet and did before
+            mbListDirty = true;     //update the list...
         }
 
         //load the data if it does not exist...
@@ -179,7 +222,17 @@ public class MainActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, movieList).commit();
         }
     }
+    //save the state
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        // Save the internet state
+        if (mbInternet == true)
+            outState.putInt(ARG_NO_INTERNET, 0);
+        else
+            outState.putInt(ARG_NO_INTERNET, 1);
 
+        super.onSaveInstanceState(outState);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -234,7 +287,9 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
                 //if view ordering changed, should really clear out last selected flag...
                 //Do it for any view ordering change at this point.
+                //and mark the gridview as dirty
                 mLastSelected = -1;
+                mbListDirty = true;
             } else {
                 Toast.makeText(getApplicationContext(),R.string.settings_internet,Toast.LENGTH_SHORT).show();
             }
@@ -259,8 +314,11 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    //
     //routine called when a movie is selected...
+    //
     public void onMovieSelected(int position) {
+
         //User selected a movie!
 
         //Get the detail fragment view...
@@ -269,14 +327,17 @@ public class MainActivity extends AppCompatActivity
         // does the detail view exist?
         if (movieDetail != null) {
             //okay - in the tablet 2 fragment layout.
-            //first, close any expanded lists
-            RelativeLayout layout = (RelativeLayout) movieDetail.getView().findViewById(R.id.detail_fragment);
-            CloseList(layout, START_ID_TRAILERS, mData.mTrailers.size());
-            CloseList(layout, START_ID_REVIEWS, mData.mReviews.size());
+            //did user chose same movie as was already chosen though?
+            if (mLastSelected != position) {
+                //first, close any expanded lists
+                RelativeLayout layout = (RelativeLayout) movieDetail.getView().findViewById(R.id.detail_fragment);
+                CloseList(layout, START_ID_TRAILERS, mData.mTrailers.size());
+                CloseList(layout, START_ID_REVIEWS, mData.mReviews.size());
 
-            //update the view...
-            movieDetail.updateMovieView(position);
-        } else {
+                //update the view...
+                movieDetail.updateMovieView(position);
+            }
+        } else if (position >= 0){
             //okay - need to swap fragments... (phone)
             //create a new fragment and send it an argument for the selected article...
             MovieDetailFragment newFragment = new MovieDetailFragment();
